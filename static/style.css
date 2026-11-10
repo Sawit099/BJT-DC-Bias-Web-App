@@ -1,0 +1,112 @@
+:root {
+  --navy: #103658;
+  --blue: #1d638b;
+  --paper: #f5f8fc;
+  --line: #d3e0ec;
+  --ink: #17344b;
+  --muted: #546d83;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 24px 16px 48px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 16px/1.6 "Noto Sans Thai", "Leelawadee UI", Tahoma, Arial, sans-serif;
+}
+
+.card {
+  max-width: 720px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 24px 28px 32px;
+}
+
+h1 { font-size: 1.5rem; margin: 0 0 4px; color: var(--navy); }
+h2 { font-size: 1.15rem; margin: 28px 0 12px; color: var(--navy); }
+.muted { color: var(--muted); margin: 0 0 20px; font-size: 0.95rem; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px 16px;
+}
+
+label { display: block; font-size: 0.9rem; color: var(--muted); }
+
+input {
+  width: 100%;
+  margin-top: 4px;
+  padding: 9px 10px;
+  font: inherit;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fbfdff;
+}
+
+input:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+
+button {
+  margin-top: 20px;
+  padding: 11px 22px;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background: var(--blue);
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover { background: var(--navy); }
+
+.error-box {
+  border-left: 4px solid #b8502c;
+  background: #fff2ec;
+  padding: 12px 16px;
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 20px;
+}
+
+.error-box ul { margin: 6px 0 0; padding-left: 20px; }
+
+.warning {
+  border-left: 4px solid #b8502c;
+  background: #fff6ee;
+  padding: 12px 16px;
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 14px;
+}
+
+.warning p { margin: 8px 0 0; font-size: 0.92rem; color: var(--muted); }
+
+table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; }
+th { background: #e6f1fa; color: var(--navy); }
+tbody tr:nth-child(even) { background: #f7fbfe; }
+td:first-child { width: 34%; font-weight: 600; }
+
+.unreliable { color: #8b98a5; text-decoration: line-through; }
+
+.badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.badge-active { background: #e2f5ee; color: #116b52; }
+.badge-cutoff { background: #eceff4; color: #455c73; }
+.badge-saturation { background: #fdeee4; color: #a4481f; }
+
+@media (max-width: 560px) {
+  .card { padding: 18px 16px 24px; }
+}

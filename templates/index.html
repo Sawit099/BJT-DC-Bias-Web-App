@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BJT DC Bias Calculator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<main class="card">
+  <header>
+    <h1>BJT Common-Emitter DC Bias</h1>
+    <p class="muted">วงจร Voltage-Divider Bias · คำนวณ DC Operating Point ด้วย Python</p>
+  </header>
+
+  {% if errors %}
+  <div class="error-box" role="alert">
+    <strong>ไม่สามารถคำนวณได้</strong>
+    <ul>
+      {% for message in errors.values() %}
+      <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <form method="post" action="/">
+    <div class="grid">
+      <label>VCC [V]
+        <input name="vcc" type="text" inputmode="decimal" value="{{ form.get('vcc', '') }}">
+      </label>
+      <label>β
+        <input name="beta" type="text" inputmode="decimal" value="{{ form.get('beta', '') }}">
+      </label>
+      <label>R1 [kΩ]
+        <input name="r1" type="text" inputmode="decimal" value="{{ form.get('r1', '') }}">
+      </label>
+      <label>R2 [kΩ]
+        <input name="r2" type="text" inputmode="decimal" value="{{ form.get('r2', '') }}">
+      </label>
+      <label>RC [kΩ]
+        <input name="rc" type="text" inputmode="decimal" value="{{ form.get('rc', '') }}">
+      </label>
+      <label>RE [kΩ]
+        <input name="re" type="text" inputmode="decimal" value="{{ form.get('re', '') }}">
+      </label>
+      <label>VBE [V]
+        <input name="vbe" type="text" inputmode="decimal" value="{{ form.get('vbe', '') }}">
+      </label>
+    </div>
+    <button type="submit">Calculate DC Bias</button>
+  </form>
+
+  {% if result %}
+  {% set region = result.region.value %}
+  {% set raw = 'unreliable' if region != 'active' else '' %}
+  <section class="results">
+    <h2>
+      ผลลัพธ์
+      <span class="badge badge-{{ region }}">
+        {{ {'active': 'Active', 'cutoff': 'Cutoff', 'saturation': 'Saturation'}[region] }}
+      </span>
+    </h2>
+
+    {% if raw %}
+    <div class="warning" role="status">
+      ⚠ แบบจำลอง forward-active ใช้ไม่ได้กับค่านี้ — ตัวเลขด้านล่างเป็นค่าดิบจากสมการ
+      ไม่ใช่คำตอบที่เชื่อถือได้
+      <p>{{ result.warning }}</p>
+    </div>
+    {% endif %}
+
+    <table>
+      <thead>
+        <tr><th>ปริมาณ</th><th>ค่า</th><th>หน่วย</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>VTH</td><td class="{{ raw }}">{{ '%.3f' % result.vth_v }}</td><td>V</td></tr>
+        <tr><td>RTH</td><td class="{{ raw }}">{{ '%.3f' % (result.rth_ohm / 1000) }}</td><td>kΩ</td></tr>
+        <tr><td>VB</td><td class="{{ raw }}">{{ '%.3f' % result.vb_v }}</td><td>V</td></tr>
+        <tr><td>VE</td><td class="{{ raw }}">{{ '%.3f' % result.ve_v }}</td><td>V</td></tr>
+        <tr><td>VC</td><td class="{{ raw }}">{{ '%.3f' % result.vc_v }}</td><td>V</td></tr>
+        <tr><td>VCE</td><td class="{{ raw }}">{{ '%.3f' % result.vce_v }}</td><td>V</td></tr>
+        <tr><td>IC</td><td class="{{ raw }}">{{ '%.3f' % (result.ic_a * 1000) }}</td><td>mA</td></tr>
+        <tr><td>IB</td><td class="{{ raw }}">{{ '%.3f' % (result.ib_a * 1e6) }}</td><td>µA</td></tr>
+        <tr><td>IE</td><td class="{{ raw }}">{{ '%.3f' % (result.ie_a * 1000) }}</td><td>mA</td></tr>
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+</main>
+</body>
+</html>
