@@ -44,7 +44,7 @@ python -m flask --app app run --debug
 python -m unittest discover -s tests -v
 ```
 
-ผลที่คาดหวัง: `Ran 34 tests ... OK`
+ผลที่คาดหวัง: `Ran 38 tests ... OK`
 
 ## โครงสร้างโปรเจกต์
 
@@ -54,7 +54,7 @@ dc_bias.py              สมการ 3 โหมด + validation + การ�
 templates/index.html    ฟอร์มและตารางผลลัพธ์ (Jinja) — ไม่มีสมการฟิสิกส์
 static/style.css        รูปแบบหน้าจอ
 tests/test_dc_bias.py   เทสต์สมการและ validation (22 tests)
-tests/test_web.py       เทสต์ HTTP ผ่าน Flask test client (12 tests)
+tests/test_web.py       เทสต์ HTTP ผ่าน Flask test client (16 tests)
 ```
 
 ## โหมดวงจร
@@ -93,7 +93,8 @@ VCE = VC − VE       VE = IE · RE (Fixed: VE = 0)
 VTH = VCC · R2 / (R1 + R2)    RTH = R1 · R2 / (R1 + R2)
 ```
 
-ความต้านทานกรอกเป็น **kΩ** และถูกแปลงเป็น Ω (×1000) ก่อนคำนวณ
+ความต้านทานกรอกเป็น **kΩ** และถูกแปลงเป็น Ω ที่ฟังก์ชัน `_kohm_to_ohm()` ใน `dc_bias.py`
+จุดเดียว ก่อนเข้าสมการทุกโหมด — template ไม่แปลงหน่วยกระแสเอง แต่ใช้คีย์ `ic_ma` / `ib_ua` / `ie_ma` จาก `as_dict()`
 
 ## เกณฑ์การตัดสิน Region
 
@@ -142,9 +143,28 @@ VCC = 12 V, R1 = 100 kΩ, R2 = 22 kΩ, RC = 2.2 kΩ, RE = 1 kΩ, β = 100, VBE =
 | เอกสาร | ร่างตาราง A1–A5 และ README | ตรวจตัวเลขกับเครื่องคิดเลขก่อนส่ง |
 
 **จุดที่เลือกฟังก์ชัน:** `app.py` ฟังก์ชัน `calculate_view()` — `if mode == "fixed" … elif mode == "emitter" … else`  
-**จุดที่แปลงหน่วย:** `dc_bias.py` เท่านั้น — ทุกฟังก์ชันคูณ kΩ ด้วย 1000 ก่อนเข้าสมการ แล้วคืนค่าเป็น SI (V, A, Ω)
+**จุดที่แปลงหน่วย:** `dc_bias.py` ฟังก์ชัน `_kohm_to_ohm()` จุดเดียว — kΩ → Ω ก่อนเข้าสมการ แล้วคืนค่าเป็น SI (V, A, Ω)  
+**จุดที่ส่งผลให้ template:** `app.py` เรียก `result.as_dict()` แล้ว template อ่านเฉพาะคีย์ `vb_v, ve_v, vc_v, vce_v, ic_ma, ib_ua, ie_ma` (ไม่มีการคำนวณหรือแปลงหน่วยใน HTML)
 
-## การเชื่อม Playwright MCP (ทางเลือก)
+## การเชื่อม Playwright MCP
+
+### MCP ทำงานอะไรในโปรเจกต์นี้
+
+MCP (Model Context Protocol) เป็นมาตรฐานที่ให้แอป AI รู้ว่ามีเครื่องมืออะไรให้เรียก และรับผลกลับมา
+ใน Lab นี้ **OpenCode = MCP Client**, **Playwright MCP = MCP Server** ที่สั่ง Chrome
+ส่วน Chrome คุยกับ Flask ผ่าน HTTP ตามปกติ จึงไม่ต้องใส่ Playwright ลง `requirements.txt`
+และ Flask ไม่รู้จัก MCP เลย
+
+```
+OpenCode ──MCP──> Playwright MCP ──สั่ง──> Chrome ──HTTP──> Flask/Python
+    ^                                          |
+    └──────MCP (Snapshot)──── Playwright ◄─────┘  อ่านหน้าเว็บ
+```
+
+รอบตรวจ A1–A5 ทำแบบนี้: เปิดหน้า → อ่าน Snapshot → เลือกโหมด → กรอกค่า → กดคำนวณ →
+อ่าน Snapshot ใหม่ → เทียบกับค่าอ้างอิงที่คำนวณมือไว้ก่อนรัน
+
+### ไฟล์ตั้งค่า
 
 โปรเจกต์มี `opencode.json` ที่ราก ซึ่งบอก OpenCode ให้เริ่ม Playwright MCP:
 

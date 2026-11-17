@@ -44,11 +44,12 @@ def _unknown_mode_error(mode: str) -> dict[str, str]:
     }
 
 
-def _render(mode: str, form, result=None, errors=None):
+def _render(mode: str, form, result=None, errors=None, error_mode=None):
     return render_template(
         "index.html",
         mode=mode,
         modes=MODE_LABELS,
+        error_mode=error_mode or MODE_LABELS[mode],
         form=form,
         result=result,
         errors=errors or {},
@@ -59,7 +60,11 @@ def _render(mode: str, form, result=None, errors=None):
 def index():
     mode = (request.args.get("mode") or "divider").strip()
     if mode not in MODE_LABELS:
-        return _render("divider", DEFAULTS, errors=_unknown_mode_error(mode))
+        return _render(
+            "divider", DEFAULTS,
+            errors=_unknown_mode_error(mode),
+            error_mode=f'"{mode}"',
+        )
     return _render(mode, DEFAULTS)
 
 
@@ -68,7 +73,11 @@ def calculate_view():
     # A missing mode keeps the Lab 2 behaviour; an unknown mode is an error.
     mode = (request.form.get("mode") or "divider").strip()
     if mode not in MODE_LABELS:
-        return _render("divider", request.form, errors=_unknown_mode_error(mode))
+        return _render(
+            "divider", request.form,
+            errors=_unknown_mode_error(mode),
+            error_mode=f'"{mode}"',
+        )
 
     try:
         if mode == "fixed":
@@ -80,4 +89,4 @@ def calculate_view():
     except ValidationError as exc:
         return _render(mode, request.form, errors={exc.field: exc.message})
 
-    return _render(mode, request.form, result=result)
+    return _render(mode, request.form, result=result.as_dict())

@@ -1,6 +1,9 @@
 import unittest
+from pathlib import Path
 
 from app import app
+
+ROOT = Path(__file__).resolve().parent.parent
 
 FORM = {"vcc": "12", "r1": "100", "r2": "22", "rc": "2.2",
         "re": "1", "beta": "100", "vbe": "0.70"}
@@ -100,3 +103,28 @@ class TestModeSelection(unittest.TestCase):
         body = self.client.post("/", data={**FIXED_FORM, "rb": "0"}).get_data(as_text=True)
         self.assertIn("RB [kΩ] ต้องมากกว่า 0", body)
         self.assertNotIn("9.514", body)
+
+    def test_error_names_the_selected_mode(self):
+        """Lab 03: errors must say which mode failed, not just 'cannot calculate'."""
+        body = self.client.post("/", data={**FIXED_FORM, "rb": "0"}).get_data(as_text=True)
+        self.assertIn("ไม่สามารถคำนวณได้ · Fixed Bias", body)
+
+    def test_unknown_mode_error_names_the_bad_value(self):
+        body = self.client.post("/", data={**FIXED_FORM, "mode": "spice"}).get_data(as_text=True)
+        self.assertIn("ไม่สามารถคำนวณได้", body)
+        self.assertIn("spice", body)
+
+
+class TestSharedResultContract(unittest.TestCase):
+    """Lab 03 grades the shared dict keys, so the page must read them directly."""
+
+    def test_template_reads_the_shared_result_keys(self):
+        source = (ROOT / "templates" / "index.html").read_text(encoding="utf-8")
+        for key in ("vb_v", "ve_v", "vc_v", "vce_v", "ic_ma", "ib_ua", "ie_ma"):
+            self.assertIn(f"result['{key}']", source)
+
+    def test_template_does_no_unit_conversion_of_current(self):
+        source = (ROOT / "templates" / "index.html").read_text(encoding="utf-8")
+        self.assertNotIn("result['ic_a']", source)
+        self.assertNotIn("result['ib_a']", source)
+        self.assertNotIn("result['ie_a']", source)

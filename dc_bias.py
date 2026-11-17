@@ -144,12 +144,17 @@ def _solve(
     )
 
 
+def _kohm_to_ohm(value: float) -> float:
+    """The single conversion point from the form unit (kOhm) to SI (Ohm)."""
+    return value * 1000.0
+
+
 def calculate(bias: BiasInput) -> BiasResult:
     """Voltage-divider bias (Lab 02 reference circuit)."""
-    r1 = bias.r1_kohm * 1000.0
-    r2 = bias.r2_kohm * 1000.0
-    rc = bias.rc_kohm * 1000.0
-    re = bias.re_kohm * 1000.0
+    r1 = _kohm_to_ohm(bias.r1_kohm)
+    r2 = _kohm_to_ohm(bias.r2_kohm)
+    rc = _kohm_to_ohm(bias.rc_kohm)
+    re = _kohm_to_ohm(bias.re_kohm)
 
     vth = bias.vcc_v * r2 / (r1 + r2)
     rth = r1 * r2 / (r1 + r2)
@@ -169,8 +174,8 @@ def calculate(bias: BiasInput) -> BiasResult:
 
 def calculate_fixed(bias: FixedInput) -> BiasResult:
     """Fixed bias: IB = (VCC - VBE) / RB, emitter tied to ground (VE = 0)."""
-    rc = bias.rc_kohm * 1000.0
-    ib = (bias.vcc_v - bias.vbe_v) / (bias.rb_kohm * 1000.0)
+    rc = _kohm_to_ohm(bias.rc_kohm)
+    ib = (bias.vcc_v - bias.vbe_v) / _kohm_to_ohm(bias.rb_kohm)
 
     return _solve(
         ib=ib,
@@ -184,9 +189,9 @@ def calculate_fixed(bias: FixedInput) -> BiasResult:
 
 def calculate_emitter(bias: EmitterInput) -> BiasResult:
     """Emitter bias: IB = (VCC - VBE) / [RB + (beta + 1)RE]."""
-    rc = bias.rc_kohm * 1000.0
-    re = bias.re_kohm * 1000.0
-    rb = bias.rb_kohm * 1000.0
+    rc = _kohm_to_ohm(bias.rc_kohm)
+    re = _kohm_to_ohm(bias.re_kohm)
+    rb = _kohm_to_ohm(bias.rb_kohm)
     ib = (bias.vcc_v - bias.vbe_v) / (rb + (bias.beta + 1.0) * re)
 
     return _solve(

@@ -15,7 +15,7 @@
 
   {% if errors %}
   <div class="error-box" role="alert">
-    <strong>ไม่สามารถคำนวณได้</strong>
+    <strong>ไม่สามารถคำนวณได้ · {{ error_mode }}</strong>
     <ul>
       {% for message in errors.values() %}
       <li>{{ message }}</li>
@@ -75,7 +75,7 @@
   </form>
 
   {% if result %}
-  {% set region = result.region.value %}
+  {% set region = result['region'] %}
   {% set raw = 'unreliable' if region != 'active' else '' %}
   <section class="results">
     <h2>
@@ -89,7 +89,7 @@
     <div class="warning" role="status">
       ⚠ แบบจำลอง forward-active ใช้ไม่ได้กับค่านี้ — ตัวเลขด้านล่างเป็นค่าดิบจากสมการ
       ไม่ใช่คำตอบที่เชื่อถือได้
-      <p>{{ result.warning }}</p>
+      <p>{{ result['warning'] }}</p>
     </div>
     {% endif %}
 
@@ -98,17 +98,17 @@
         <tr><th>ปริมาณ</th><th>ค่า</th><th>หน่วย</th></tr>
       </thead>
       <tbody>
-        {% if result.vth_v is not none %}
-        <tr><td>VTH</td><td class="{{ raw }}">{{ '%.3f' % result.vth_v }}</td><td>V</td></tr>
-        <tr><td>RTH</td><td class="{{ raw }}">{{ '%.3f' % (result.rth_ohm / 1000) }}</td><td>kΩ</td></tr>
+        {% if result['vth_v'] is not none %}
+        <tr><td>VTH</td><td class="{{ raw }}">{{ '%.3f' % result['vth_v'] }}</td><td>V</td></tr>
+        <tr><td>RTH</td><td class="{{ raw }}">{{ '%.3f' % (result['rth_ohm'] / 1000) }}</td><td>kΩ</td></tr>
         {% endif %}
-        <tr><td>VB</td><td class="{{ raw }}">{{ '%.3f' % result.vb_v }}</td><td>V</td></tr>
-        <tr><td>VE</td><td class="{{ raw }}">{{ '%.3f' % result.ve_v }}</td><td>V</td></tr>
-        <tr><td>VC</td><td class="{{ raw }}">{{ '%.3f' % result.vc_v }}</td><td>V</td></tr>
-        <tr><td>VCE</td><td class="{{ raw }}">{{ '%.3f' % result.vce_v }}</td><td>V</td></tr>
-        <tr><td>IC</td><td class="{{ raw }}">{{ '%.3f' % (result.ic_a * 1000) }}</td><td>mA</td></tr>
-        <tr><td>IB</td><td class="{{ raw }}">{{ '%.3f' % (result.ib_a * 1e6) }}</td><td>µA</td></tr>
-        <tr><td>IE</td><td class="{{ raw }}">{{ '%.3f' % (result.ie_a * 1000) }}</td><td>mA</td></tr>
+        <tr><td>VB</td><td class="{{ raw }}">{{ '%.3f' % result['vb_v'] }}</td><td>V</td></tr>
+        <tr><td>VE</td><td class="{{ raw }}">{{ '%.3f' % result['ve_v'] }}</td><td>V</td></tr>
+        <tr><td>VC</td><td class="{{ raw }}">{{ '%.3f' % result['vc_v'] }}</td><td>V</td></tr>
+        <tr><td>VCE</td><td class="{{ raw }}">{{ '%.3f' % result['vce_v'] }}</td><td>V</td></tr>
+        <tr><td>IC</td><td class="{{ raw }}">{{ '%.3f' % result['ic_ma'] }}</td><td>mA</td></tr>
+        <tr><td>IB</td><td class="{{ raw }}">{{ '%.3f' % result['ib_ua'] }}</td><td>µA</td></tr>
+        <tr><td>IE</td><td class="{{ raw }}">{{ '%.3f' % result['ie_ma'] }}</td><td>mA</td></tr>
       </tbody>
     </table>
   </section>
