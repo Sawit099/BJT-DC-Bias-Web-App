@@ -6,6 +6,14 @@ Flask Web Application สำหรับคำนวณ **DC Operating Point** �
 
 สร้างเป็นผลงาน Lab 02–03 รายวิชา ENG29 2121 Computer Programming for Electrical Engineers
 
+## ลิงก์งานส่ง (Lab 03)
+
+- **Repository:** <https://github.com/Sawit099/BJT-DC-Bias-Web-App>
+- **Commit SHA ของงาน Lab 03:** `3d226ce932dddb95bcb40af6b20b511b80ba4ffc`
+- Commit ถัดจาก SHA นี้แก้เฉพาะบรรทัด SHA ใน README ไม่มีการเปลี่ยนโค้ดหรือผลคำนวณ
+
+วิธีรันและเปิดเว็บอยู่ในหัวข้อ [การติดตั้ง](#การติดตั้ง) และ [การรันเว็บ](#การรันเว็บ) ด้านล่าง
+
 ## ความต้องการของระบบ
 
 - Python 3.15 (ทดสอบด้วย 3.15.2)
