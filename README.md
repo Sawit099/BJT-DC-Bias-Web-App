@@ -147,7 +147,7 @@ VCC = 12 V, R1 = 100 kΩ, R2 = 22 kΩ, RC = 2.2 kΩ, RE = 1 kΩ, β = 100, VBE =
 |---|---|---|
 | `dc_bias.py` | เขียน `calculate_fixed`, `calculate_emitter`, `_solve`, `as_dict()`, `parse_fixed`, `parse_emitter` | เทียบสมการกับใบงานทีละบรรทัด, ตรวจหน่วย kΩ→Ω, ตรวจว่า Condition `IB ≤ 0` และ `VCE ≤ 0.2 V` ตรงใบงาน |
 | `app.py` | เขียน `if/elif` เลือกโฟลเดอร์ตาม `mode` และส่ง `mode` ให้ template | ตรวจว่าโหมดไม่รู้จักไม่ถูกเดาเป็น Divider และ error ไม่แสดงผลรอบก่อน |
-| `tests/` | เขียนเทสต์ตามค่าอ้างอิง A1–A5 | รันเองทั้งหมด 34 เทสต์ และตรวจว่า Divider ยังได้ค่าเดิม |
+| `tests/` | เขียนเทสต์ตามค่าอ้างอิง A1–A5 | รันเองทั้งหมด 38 เทสต์ และตรวจว่า Divider ยังได้ค่าเดิม |
 | เอกสาร | ร่างตาราง A1–A5 และ README | ตรวจตัวเลขกับเครื่องคิดเลขก่อนส่ง |
 
 **จุดที่เลือกฟังก์ชัน:** `app.py` ฟังก์ชัน `calculate_view()` — `if mode == "fixed" … elif mode == "emitter" … else`  
@@ -207,3 +207,24 @@ OpenCode ──MCP──> Playwright MCP ──สั่ง──> Chrome ──
 
 ต้องมี **Node.js 18+** (ติดตั้งแล้ว: v24.20.0) และ **Chrome** — ถ้าไม่ครบให้ใช้ **OpenCode Browser Tool**
 แทนได้ โดยระบุวิธีจริงในตาราง A1–A5
+
+### ตรวจว่าเชื่อมต่อแล้ว
+
+```sh
+opencode mcp list
+# ✓ playwright  connected
+```
+
+รอบตรวจ A1–A5 ของงานนี้ใช้ Playwright MCP 1.66.0 ควบคุม Chrome จริง
+ภาพหลักฐานอยู่ใน [`docs/evidence/`](docs/evidence/) (A1, A4, A5)
+
+### แก้ปัญหา `'npx' is not recognized`
+
+Background service ของ OpenCode จำ PATH ไว้ตั้งแต่ตอนเริ่ม process ถ้าติดตั้ง Node.js
+หลังจากนั้นจะเห็นข้อความนี้ใน `opencode mcp list` — แก้ด้วย `opencode service restart`
+(หรือปิด–เปิดแอปใหม่ทั้งหมด) หรือชี้ `environment.PATH` ไปที่โฟลเดอร์ Node ชั่วคราว
+เช่น
+
+```json
+"environment": { "PATH": "C:\\Program Files\\nodejs;{env:PATH}" }
+```

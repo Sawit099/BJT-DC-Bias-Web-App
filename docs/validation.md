@@ -83,7 +83,7 @@ forward-active ให้เมื่อเงื่อนไขไม่เป�
 | ใส่ β = 0 | ข้อความ "β ต้องมากกว่า 0" และฟอร์มยังใช้งานได้ (HTTP 200) |
 | ใส่ VBE = 3 (VTH = 2.164) | badge **Cutoff**, ค่าถูกขีดฆ่า, มี warning |
 
-## 5. Lab 03 — ตาราง A1–A5 (ตรวจผ่าน Browser)
+## 5. Lab 03 — ตาราง A1–A5 (ตรวจผ่าน Playwright MCP)
 
 ค่าคงที่ที่ใช้ร่วมกัน: VCC = 12 V, RC = 2.2 kΩ, β = 100, VBE = 0.70 V
 เกณฑ์: IC คลาดไม่เกิน 0.01 mA, VCE คลาดไม่เกิน 0.02 V เทียบกับค่าอ้างอิงที่ยังไม่ปัดเศษ
@@ -104,11 +104,11 @@ A4 Emitter RB=1M RE=2k
 
 | ID | โหมด + อินพุต | คาดหมายก่อนรัน | เห็นจริง | วิธีตรวจ | สถานะ |
 |---|---|---|---|---|---|
-| A1 | Divider · R1=100k, R2=22k, RE=1k | IC 1.2299 mA · VCE 8.0522 V | IC 1.230 mA · VCE 8.052 V · badge Active | OpenCode Browser | PASS |
-| A2 | Fixed · RB=1000 kΩ | IC 1.1300 mA · VCE 9.5140 V | IC 1.130 mA · VCE 9.514 V · VE 0.000 V · ไม่มีแถว VTH | OpenCode Browser | PASS |
-| A3 | Emitter · RB=1000 kΩ, RE=1k | IC 1.0263 mA · VCE 8.7054 V | IC 1.026 mA · VCE 8.705 V · VB 1.737 V | OpenCode Browser | PASS |
-| A4 | Emitter · เหมือน A3 แต่ RE=2k | ทำนาย: RE ↑ → IB ↓ → **IC ลด** · IC 0.9401 mA · VCE 8.0328 V | IC 0.940 mA · VCE 8.033 V · VE 1.899 V | OpenCode Browser | PASS |
-| A5 | Fixed · RB=0 | ข้อความให้แก้ RB, เว็บไม่ล่ม, ไม่แสดงผลรอบก่อน | "RB [kΩ] ต้องมากกว่า 0 kΩ" · ไม่มีส่วนผลลัพธ์ · HTTP 200 | OpenCode Browser | PASS |
+| A1 | Divider · R1=100k, R2=22k, RE=1k | IC 1.2299 mA · VCE 8.0522 V | IC 1.230 mA · VCE 8.052 V · badge Active | Playwright MCP | PASS |
+| A2 | Fixed · RB=1000 kΩ | IC 1.1300 mA · VCE 9.5140 V | IC 1.130 mA · VCE 9.514 V · VE 0.000 V · ไม่มีแถว VTH | Playwright MCP | PASS |
+| A3 | Emitter · RB=1000 kΩ, RE=1k | IC 1.0263 mA · VCE 8.7054 V | IC 1.026 mA · VCE 8.705 V · VB 1.737 V | Playwright MCP | PASS |
+| A4 | Emitter · เหมือน A3 แต่ RE=2k | ทำนาย: RE ↑ → IB ↓ → **IC ลด** · IC 0.9401 mA · VCE 8.0328 V | IC 0.940 mA · VCE 8.033 V · VE 1.899 V | Playwright MCP | PASS |
+| A5 | Fixed · RB=0 | ข้อความให้แก้ RB, เว็บไม่ล่ม, ไม่แสดงผลรอบก่อน | "RB [kΩ] ต้องมากกว่า 0 kΩ" · ไม่มีส่วนผลลัพธ์ · HTTP 200 | Playwright MCP | PASS |
 
 ### หลักฐานที่คัดจากหน้าเว็บ (Snapshot)
 
@@ -130,10 +130,24 @@ A5 — โหมด Fixed Bias, RB = 0:
 
 > หลัง error ไม่มีส่วน "ผลลัพธ์" หลงเหลืออยู่บนหน้า — ตรงตามที่ใบงานกำหนด
 
-> **วิธีตรวจ:** Playwright MCP เตรียมครบแล้ว (Node.js v24.20.0, npm 11.19.0 และ `opencode.json`
-> ตามสูตร V2 ของใบงาน) แต่ OpenCode ต้องปิด–เปิดใหม่เพื่ออ่าน PATH และ config
-> รอบตรวจ A1–A5 ข้างต้นจึงใช้ **OpenCode Browser Tool** ซึ่งใบงานอนุญาตให้ใช้แทนได้
-> และให้คะแนนเท่ากันทุกวิธี เมื่อ MCP `playwright` ขึ้นสถานะ connected จะรันซ้ำและอัปเดตช่องนี้
+### ภาพหลักฐานจาก Chrome (Playwright MCP)
+
+| กรณี | ภาพ |
+|---|---|
+| A1 Divider (ผลเดิมไม่เสีย) | [`evidence/lab03-a1-divider.png`](evidence/lab03-a1-divider.png) |
+| A4 Emitter RE = 2 kΩ | [`evidence/lab03-a4-emitter-re2.png`](evidence/lab03-a4-emitter-re2.png) |
+| A5 Fixed RB = 0 (error) | [`evidence/lab03-a5-fixed-rb0.png`](evidence/lab03-a5-fixed-rb0.png) |
+
+![A1 Divider](evidence/lab03-a1-divider.png)
+
+![A5 Fixed RB=0](evidence/lab03-a5-fixed-rb0.png)
+
+> **วิธีตรวจ:** **Playwright MCP 1.66.0** ควบคุม Chrome จริงผ่าน `npx -y @playwright/mcp@latest
+> --browser chrome --isolated` — เปิดหน้า อ่าน Snapshot กรอกฟอร์ม กดปุ่ม และอ่านผลจาก DOM
+> ไม่ได้อ่านโค้ดหรือใช้ curl แทน
+> หมายเหตุ: background service ของ OpenCode บนเครื่องนี้ถือ PATH ก่อนติดตั้ง Node.js
+> จึงต้องชี้ `environment.PATH` ไปที่โฟลเดอร์ Node ระหว่างรอบตรวจ (แก้ได้ถาวรด้วย
+> `opencode service restart`)
 
 ## 6. การทวนซ้ำกรณี A4 (รอบที่ 2 แยกจาก A1–A5)
 
