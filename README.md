@@ -143,3 +143,23 @@ VCC = 12 V, R1 = 100 kΩ, R2 = 22 kΩ, RC = 2.2 kΩ, RE = 1 kΩ, β = 100, VBE =
 
 **จุดที่เลือกฟังก์ชัน:** `app.py` ฟังก์ชัน `calculate_view()` — `if mode == "fixed" … elif mode == "emitter" … else`  
 **จุดที่แปลงหน่วย:** `dc_bias.py` เท่านั้น — ทุกฟังก์ชันคูณ kΩ ด้วย 1000 ก่อนเข้าสมการ แล้วคืนค่าเป็น SI (V, A, Ω)
+
+## การเชื่อม Playwright MCP (ทางเลือก)
+
+โปรเจกต์มี `opencode.json` ที่ราก ซึ่งบอก OpenCode ให้เริ่ม Playwright MCP:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "playwright": {
+        "type": "local",
+        "command": ["npx", "-y", "@playwright/mcp@latest", "--browser", "chrome", "--isolated"]
+      }
+    }
+  }
+}
+```
+
+ต้องมี **Node.js 18+** (ติดตั้งแล้ว: v24.20.0) และ **Chrome** — ถ้าไม่ครบให้ใช้ **OpenCode Browser Tool**
+แทนได้ โดยระบุวิธีจริงในตาราง A1–A5
