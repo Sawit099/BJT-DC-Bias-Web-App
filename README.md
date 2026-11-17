@@ -37,15 +37,29 @@ python -m pip install -r requirements.txt
 
 ## การรันเว็บ
 
+บน Windows วิธีเร็วที่สุด: **ดับเบิลคลิก `start.bat`** — สคริปต์จะเปิดเซิร์ฟเวอร์แล้วเปิดเบราว์เซอร์ให้เอง
+
+หรือรันจาก terminal ในโฟลเดอร์โปรเจกต์ (เลือกทางใดทางหนึ่ง):
+
 ```bash
+python app.py
 python -m flask --app app run --debug
 ```
 
-เปิดเบราว์เซอร์ที่ <http://127.0.0.1:5000/>
+แล้วเปิดเบราว์เซอร์ที่ <http://127.0.0.1:5000/>
 
 > ต้องเปิดผ่าน Flask server เท่านั้น — การ double-click เปิด `templates/index.html`
 > ด้วย `file://` จะไม่ได้ผล เพราะฟอร์มต้องส่ง HTTP request ไปให้ Python คำนวณ
 > Flask development server ใช้สำหรับเครื่องผู้พัฒนาเท่านั้น ห้ามเปิดสู่เครือข่ายสาธารณะ
+
+### ถ้าเปิดเว็บไม่ขึ้น
+
+| อาการที่เห็น | สาเหตุ | วิธีแก้ |
+|---|---|---|
+| ดับเบิลคลิก `templates/index.html` แล้วหน้าว่างหรือเห็น `{{ ... }}` | เปิดด้วย `file://` ไม่ผ่าน Flask | เปิด <http://127.0.0.1:5000/> หลังรัน `python app.py` |
+| `This site can't be reached` / `ERR_CONNECTION_REFUSED` | ยังไม่ได้รันเซิร์ฟเวอร์ หรือปิดหน้าต่าง terminal ไปแล้ว | รัน `python app.py` หรือ `start.bat` แล้วโหลดหน้าใหม่ |
+| `Address already in use` / พอร์ต 5000 ไม่ว่าง | มีเซิร์ฟเวอร์รันค้างอยู่แล้ว | เปิด <http://127.0.0.1:5000/> ได้เลย ไม่ต้องรันซ้ำ — ถ้าต้องการคนละพอร์ต ใช้ `set PORT=5001` (PowerShell: `$env:PORT=5001`) แล้วค่อย `python app.py` |
+| เปิดจากมือถือหรือเครื่องอื่นในวงแลน | เซิร์ฟเวอร์ผูกที่ `127.0.0.1` เท่านั้น | ใช้เครื่องเดียวกัน หรือแก้ `host` ใน `app.py` (เฉพาะเครือข่ายที่ไว้ใจได้) |
 
 ## การรันเทสต์
 
@@ -58,7 +72,8 @@ python -m unittest discover -s tests -v
 ## โครงสร้างโปรเจกต์
 
 ```
-app.py                  Flask routes (GET / และ POST /) + เลือกโหมดด้วย if/elif
+app.py                  Flask routes (GET / และ POST /) + เลือกโหมดด้วย if/elif + `python app.py`
+start.bat               เปิดเซิร์ฟเวอร์และเปิดเบราว์เซอร์ให้ (Windows)
 dc_bias.py              สมการ 3 โหมด + validation + การตัดสิน region + as_dict()
 templates/index.html    ฟอร์มและตารางผลลัพธ์ (Jinja) — ไม่มีสมการฟิสิกส์
 static/style.css        รูปแบบหน้าจอ

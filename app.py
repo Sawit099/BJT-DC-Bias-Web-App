@@ -3,6 +3,8 @@
 Routes only: parsing and physics live in :mod:`dc_bias`.
 """
 
+import os
+
 from flask import Flask, render_template, request
 
 from dc_bias import (
@@ -90,3 +92,13 @@ def calculate_view():
         return _render(mode, request.form, errors={exc.field: exc.message})
 
     return _render(mode, request.form, result=result.as_dict())
+
+
+if __name__ == "__main__":
+    # `python app.py` must also work: students often launch the file directly
+    # instead of `python -m flask --app app run`. Set PORT to avoid a busy 5000.
+    app.run(
+        host="127.0.0.1",
+        port=int(os.environ.get("PORT", "5000")),
+        debug=True,
+    )
