@@ -9,9 +9,10 @@ Flask Web Application สำหรับคำนวณ **DC Operating Point** �
 ## ลิงก์งานส่ง (Lab 03)
 
 - **Repository:** <https://github.com/Sawit099/BJT-DC-Bias-Web-App>
-- **Commit SHA ของงาน Lab 03:** `6774e33c0074a6b1a008db1adeb5db197ea7e635`
+- **Commit SHA ของงาน Lab 03:** `aae798d5a382846aada9299ef4f4ede7b3f7b8a0`
 - **วิธีตรวจ A1–A5:** Playwright MCP (Chrome จริง) — ตารางและภาพหลักฐานอยู่ที่ [`docs/validation.md`](docs/validation.md) §5
 - Commit ถัดจาก SHA นี้แก้เฉพาะส่วน "ลิงก์งานส่ง" ใน README ไม่มีการเปลี่ยนโค้ดหรือผลคำนวณ
+- SHA นี้เพิ่มความสะดวกในการเปิดเว็บ (`python app.py`, `start.bat`) สมการและผลคำนวณเหมือน commit ก่อนหน้า
 
 วิธีรันและเปิดเว็บอยู่ในหัวข้อ [การติดตั้ง](#การติดตั้ง) และ [การรันเว็บ](#การรันเว็บ) ด้านล่าง
 
