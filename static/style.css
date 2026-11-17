@@ -65,6 +65,37 @@ button {
 
 button:hover { background: var(--navy); }
 
+.mode-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.mode-bar label { flex: 1 1 260px; }
+
+.mode-bar select {
+  width: 100%;
+  margin-top: 4px;
+  padding: 9px 10px;
+  font: inherit;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fbfdff;
+}
+
+.mode-bar button { margin-top: 0; }
+
+button.secondary {
+  color: var(--navy);
+  background: #e6f1fa;
+}
+
+button.secondary:hover { background: #d3e6f6; }
+
 .error-box {
   border-left: 4px solid #b8502c;
   background: #fff2ec;

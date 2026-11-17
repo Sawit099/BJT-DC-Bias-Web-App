@@ -10,7 +10,7 @@
 <main class="card">
   <header>
     <h1>BJT Common-Emitter DC Bias</h1>
-    <p class="muted">วงจร Voltage-Divider Bias · คำนวณ DC Operating Point ด้วย Python</p>
+    <p class="muted">เลือกวงจรไบอัส 3 แบบ · คำนวณ DC Operating Point ด้วย Python</p>
   </header>
 
   {% if errors %}
@@ -24,7 +24,19 @@
   </div>
   {% endif %}
 
+  <form method="get" action="/" class="mode-bar">
+    <label>โหมดวงจร
+      <select name="mode">
+        {% for value, label in modes.items() %}
+        <option value="{{ value }}" {% if value == mode %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit" class="secondary">เปลี่ยนโหมด</button>
+  </form>
+
   <form method="post" action="/">
+    <input type="hidden" name="mode" value="{{ mode }}">
     <div class="grid">
       <label>VCC [V]
         <input name="vcc" type="text" inputmode="decimal" value="{{ form.get('vcc', '') }}">
@@ -32,21 +44,32 @@
       <label>β
         <input name="beta" type="text" inputmode="decimal" value="{{ form.get('beta', '') }}">
       </label>
+      <label>VBE [V]
+        <input name="vbe" type="text" inputmode="decimal" value="{{ form.get('vbe', '') }}">
+      </label>
+
+      {% if mode == 'divider' %}
       <label>R1 [kΩ]
         <input name="r1" type="text" inputmode="decimal" value="{{ form.get('r1', '') }}">
       </label>
       <label>R2 [kΩ]
         <input name="r2" type="text" inputmode="decimal" value="{{ form.get('r2', '') }}">
       </label>
+      {% else %}
+      <label>RB [kΩ]
+        <input name="rb" type="text" inputmode="decimal" value="{{ form.get('rb', '') }}">
+      </label>
+      {% endif %}
+
       <label>RC [kΩ]
         <input name="rc" type="text" inputmode="decimal" value="{{ form.get('rc', '') }}">
       </label>
+
+      {% if mode != 'fixed' %}
       <label>RE [kΩ]
         <input name="re" type="text" inputmode="decimal" value="{{ form.get('re', '') }}">
       </label>
-      <label>VBE [V]
-        <input name="vbe" type="text" inputmode="decimal" value="{{ form.get('vbe', '') }}">
-      </label>
+      {% endif %}
     </div>
     <button type="submit">Calculate DC Bias</button>
   </form>
@@ -56,7 +79,7 @@
   {% set raw = 'unreliable' if region != 'active' else '' %}
   <section class="results">
     <h2>
-      ผลลัพธ์
+      ผลลัพธ์ · {{ modes[mode] }}
       <span class="badge badge-{{ region }}">
         {{ {'active': 'Active', 'cutoff': 'Cutoff', 'saturation': 'Saturation'}[region] }}
       </span>
@@ -75,8 +98,10 @@
         <tr><th>ปริมาณ</th><th>ค่า</th><th>หน่วย</th></tr>
       </thead>
       <tbody>
+        {% if result.vth_v is not none %}
         <tr><td>VTH</td><td class="{{ raw }}">{{ '%.3f' % result.vth_v }}</td><td>V</td></tr>
         <tr><td>RTH</td><td class="{{ raw }}">{{ '%.3f' % (result.rth_ohm / 1000) }}</td><td>kΩ</td></tr>
+        {% endif %}
         <tr><td>VB</td><td class="{{ raw }}">{{ '%.3f' % result.vb_v }}</td><td>V</td></tr>
         <tr><td>VE</td><td class="{{ raw }}">{{ '%.3f' % result.ve_v }}</td><td>V</td></tr>
         <tr><td>VC</td><td class="{{ raw }}">{{ '%.3f' % result.vc_v }}</td><td>V</td></tr>

@@ -50,3 +50,53 @@ class TestInvalidInput(unittest.TestCase):
     def test_post_without_any_form_data_does_not_crash(self):
         res = self.client.post("/")
         self.assertEqual(res.status_code, 200)
+
+
+FIXED_FORM = {"mode": "fixed", "vcc": "12", "rb": "1000", "rc": "2.2",
+              "beta": "100", "vbe": "0.70"}
+EMITTER_FORM = {"mode": "emitter", "vcc": "12", "rb": "1000", "rc": "2.2",
+                "re": "1", "beta": "100", "vbe": "0.70"}
+
+
+class TestModeSelection(unittest.TestCase):
+    """Lab 03: choose the bias mode, show only the fields that mode needs."""
+
+    def setUp(self):
+        self.client = app.test_client()
+
+    def test_fixed_form_shows_rb_and_not_divider_fields(self):
+        body = self.client.get("/?mode=fixed").get_data(as_text=True)
+        self.assertIn('name="rb"', body)
+        self.assertNotIn('name="r1"', body)
+
+    def test_emitter_form_shows_rb_and_re(self):
+        body = self.client.get("/?mode=emitter").get_data(as_text=True)
+        self.assertIn('name="rb"', body)
+        self.assertIn('name="re"', body)
+
+    def test_fixed_post_calculates_without_re(self):
+        body = self.client.post("/", data=FIXED_FORM).get_data(as_text=True)
+        self.assertIn("1.130", body)     # IC [mA]
+        self.assertIn("9.514", body)     # VCE [V]
+        self.assertNotIn("2.164", body)  # no VTH row for fixed bias
+
+    def test_emitter_post_uses_re(self):
+        body = self.client.post("/", data=EMITTER_FORM).get_data(as_text=True)
+        self.assertIn("1.026", body)     # IC [mA]
+        self.assertIn("8.705", body)     # VCE [V]
+
+    def test_result_names_the_mode(self):
+        body = self.client.post("/", data=FIXED_FORM).get_data(as_text=True)
+        self.assertIn("Fixed Bias", body)
+
+    def test_unknown_mode_is_an_error(self):
+        res = self.client.post("/", data={**FIXED_FORM, "mode": "spice"})
+        body = res.get_data(as_text=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("โหมด", body)
+        self.assertNotIn("badge-active", body)
+
+    def test_failed_input_does_not_show_previous_result(self):
+        body = self.client.post("/", data={**FIXED_FORM, "rb": "0"}).get_data(as_text=True)
+        self.assertIn("RB [kΩ] ต้องมากกว่า 0", body)
+        self.assertNotIn("9.514", body)
