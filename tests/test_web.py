@@ -175,3 +175,9 @@ class TestSimulatorUi(unittest.TestCase):
     def test_chartjs_script_included(self):
         body = self.client.get("/").get_data(as_text=True)
         self.assertIn("chart.umd.min.js", body)
+
+    def test_app_js_has_no_fake_data(self):
+        src = (ROOT / "static" / "app.js").read_text(encoding="utf-8")
+        self.assertIn("fetch('/api/simulate'", src)
+        self.assertIn("clearResults", src)
+        self.assertNotIn("hardcoded", src.lower())
