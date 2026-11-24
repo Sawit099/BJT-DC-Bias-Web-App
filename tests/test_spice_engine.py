@@ -52,7 +52,20 @@ class TestAcRun(unittest.TestCase):
         self.assertTrue(any(g > 0 for g in r.gain_db))
 
 
+@unittest.skipUnless(se.ngspice_available(), "ngspice not installed")
+class TestTranRun(unittest.TestCase):
+    def test_tran_returns_waveforms(self):
+        inp = se.CEInput(12,100,22,2.2,1,10,10,10,10,1000)
+        r = se.run_tran(inp)
+        self.assertEqual(len(r.time_ms), len(r.vin_v))
+        self.assertEqual(len(r.vout_v), len(r.vin_v))
+        self.assertGreater(max(r.time_ms), 2.0)
+        self.assertGreater(max(abs(v) for v in r.vin_v), 0.005)
+        self.assertGreater(max(abs(v) for v in r.vout_v), 0.01)
+
+
 if __name__ == "__main__":
     unittest.main()
+
 
 

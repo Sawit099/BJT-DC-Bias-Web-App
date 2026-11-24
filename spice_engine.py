@@ -366,3 +366,23 @@ def run_ac(
             run_id=run_id,
         )
 
+
+def run_tran(inp: CEInput) -> TranResult:
+    inp.validate()
+    netlist = build_ce_netlist(inp, analysis="tran")
+    run_id = uuid.uuid4().hex[:12]
+    with tempfile.TemporaryDirectory(prefix="ngce_tran_") as run_dir:
+        _run_ngspice(netlist, run_dir)
+        cols = _parse_wrdata(os.path.join(run_dir, "tran.txt"), expected_pairs=2)
+        time_ms = [t * 1000.0 for t in cols[0]]
+        vin_v = cols[1]
+        vout_v = cols[3]
+        return TranResult(
+            time_ms=time_ms,
+            vin_v=vin_v,
+            vout_v=vout_v,
+            engine="ngspice",
+            model=DEFAULT_MODEL_NAME,
+            run_id=run_id,
+        )
+
