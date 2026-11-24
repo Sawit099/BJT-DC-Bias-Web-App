@@ -40,6 +40,19 @@ class TestOpRun(unittest.TestCase):
             se.CEInput(vcc=12, r1k=100, r2k=22, rck=2.2, rek=0, rlk=10, cin_u=10, cout_u=10, vin_mvp=10, freq_hz=1000).validate()
 
 
+@unittest.skipUnless(se.ngspice_available(), "ngspice not installed")
+class TestAcRun(unittest.TestCase):
+    def test_ac_returns_bode_data(self):
+        inp = se.CEInput(12,100,22,2.2,1,10,10,10,10,1000)
+        r = se.run_ac(inp)
+        self.assertGreater(len(r.freq_hz), 50)
+        self.assertEqual(len(r.freq_hz), len(r.gain_db))
+        self.assertEqual(len(r.phase_deg), len(r.gain_db))
+        self.assertTrue(any(f >= 900 and f <= 1100 for f in r.freq_hz))
+        self.assertTrue(any(g > 0 for g in r.gain_db))
+
+
 if __name__ == "__main__":
     unittest.main()
+
 

@@ -263,6 +263,59 @@ def _parse_op_value(log_text: str, name: str) -> float:
     return float(m.group(1))
 
 
+@dataclass
+class AcResult:
+    freq_hz: list[float]
+    gain_db: list[float]
+    phase_deg: list[float]
+    engine: str
+    model: str
+    run_id: str
+
+    def as_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
+class TranResult:
+    time_ms: list[float]
+    vin_v: list[float]
+    vout_v: list[float]
+    engine: str
+    model: str
+    run_id: str
+
+    def as_dict(self) -> dict:
+        return asdict(self)
+
+
+def _parse_wrdata(path: str, expected_pairs: int) -> list[list[float]]:
+    if not os.path.isfile(path):
+        raise NgspiceError(f"ไม่พบไฟล์ผลลัพธ์ ngspice: {os.path.basename(path)}")
+    cols: list[list[float]] = [[] for _ in range(expected_pairs * 2)]
+    with open(path, "r", encoding="utf-8", errors="replace") as f:
+        for raw in f:
+            line = raw.strip()
+            if not line or line.startswith("*") or line.startswith("#"):
+                continue
+            parts = line.split()
+            if len(parts) < expected_pairs * 2:
+                continue
+            # skip non-numeric rows
+            try:
+                nums = [float(p) for p in parts[: expected_pairs * 2]]
+            except ValueError:
+                continue
+            for i, n in enumerate(nums):
+                cols[i].append(n)
+    if not cols or not cols[0]:
+        raise NgspiceError(f"ไฟล์ผลลัพธ์ {os.path.basename(path)} ว่างหรืออ่านไม่ได้")
+    lengths = {len(c) for c in cols}
+    if len(lengths) != 1:
+        raise NgspiceError(f"ไฟล์ผลลัพธ์ {os.path.basename(path)} มีความยาวคอลัมน์ไม่ตรงกัน")
+    return cols
+
+
 def run_op(inp: CEInput) -> OpResult:
     inp.validate()
     netlist = build_ce_netlist(inp, analysis="op")
@@ -281,6 +334,33 @@ def run_op(inp: CEInput) -> OpResult:
             vc=vc,
             vce=vce,
             ic_ma=ic_ma,
+            engine="ngspice",
+            model=DEFAULT_MODEL_NAME,
+            run_id=run_id,
+        )
+
+
+def run_ac(
+    inp: CEInput,
+    fstart: float = 10.0,
+    fstop: float = 1_000_000.0,
+    points: int = 20,
+) -> AcResult:
+    inp.validate()
+    netlist = build_ce_netlist(
+        inp, analysis="ac", ac_fstart=fstart, ac_fstop=fstop, ac_points=points
+    )
+    run_id = uuid.uuid4().hex[:12]
+    with tempfile.TemporaryDirectory(prefix="ngce_ac_") as run_dir:
+        _run_ngspice(netlist, run_dir)
+        cols = _parse_wrdata(os.path.join(run_dir, "ac.txt"), expected_pairs=2)
+        freq_hz = cols[0]
+        gain_db = cols[1]
+        phase_deg = cols[3]
+        return AcResult(
+            freq_hz=freq_hz,
+            gain_db=gain_db,
+            phase_deg=phase_deg,
             engine="ngspice",
             model=DEFAULT_MODEL_NAME,
             run_id=run_id,
