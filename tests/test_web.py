@@ -161,3 +161,17 @@ class TestSpiceApi(unittest.TestCase):
             res = self.client.post("/api/simulate", json=self.payload)
         data = res.get_json()
         self.assertFalse(data["ok"])
+
+
+class TestSimulatorUi(unittest.TestCase):
+    def setUp(self):
+        self.client = app.test_client()
+
+    def test_index_has_simulator_section(self):
+        body = self.client.get("/").get_data(as_text=True)
+        for token in ["CE Amplifier", "ngspice", "amp", "freq", "acChart", "tranChart", "Run Simulation"]:
+            self.assertIn(token, body)
+
+    def test_chartjs_script_included(self):
+        body = self.client.get("/").get_data(as_text=True)
+        self.assertIn("chart.umd.min.js", body)

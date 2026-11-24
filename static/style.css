@@ -141,3 +141,19 @@ td:first-child { width: 34%; font-weight: 600; }
 @media (max-width: 560px) {
   .card { padding: 18px 16px 24px; }
 }
+
+.sim-section { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
+.sim-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 16px; margin-top: 12px; }
+.sim-actions { display: flex; gap: 12px; align-items: end; margin: 16px 0; flex-wrap: wrap; }
+.sim-actions label { min-width: 220px; }
+.sim-actions select { width: 100%; margin-top: 4px; padding: 9px 10px; font: inherit; color: var(--ink); border: 1px solid #b8cad8; border-radius: 4px; background: #fff; }
+.status-box { padding: 10px 12px; border-radius: 4px; background: #eef5fb; color: var(--navy); font-size: 0.92rem; margin: 8px 0; }
+.status-box.error { background: #fff4f2; color: #8a1d12; border: 1px solid #e8c2bc; }
+.status-box.ok { background: #effaf3; color: #1d5a2f; border: 1px solid #bdddc6; }
+.sim-provenance { font-size: 0.85rem; margin-bottom: 12px; }
+.chart-panel { margin-top: 16px; }
+.chart-panel h3 { margin: 0 0 8px; font-size: 1rem; color: var(--navy); }
+.chart-wrap { position: relative; width: 100%; min-height: 320px; }
+.chart-wrap canvas { width: 100% !important; height: 320px !important; }
+#sim-op h3 { margin: 16px 0 8px; font-size: 1rem; color: var(--navy); }
+@media (max-width: 640px) { .sim-actions { flex-direction: column; align-items: stretch; } .sim-actions label { min-width: 0; } .chart-wrap, .chart-wrap canvas { min-height: 260px; height: 260px !important; } }

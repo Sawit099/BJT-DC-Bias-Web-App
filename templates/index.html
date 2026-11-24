@@ -113,6 +113,63 @@
     </table>
   </section>
   {% endif %}
+
+  <section class="sim-section" id="simulator">
+    <h2>CE Amplifier Simulator (ngspice)</h2>
+    <p class="muted">CE Voltage Divider reference circuit · คำนวณด้วย ngspice จริง (.op / .ac / .tran) แยกจากผล analytical ด้านบน</p>
+
+    <div class="sim-grid">
+      <label>VCC [V]<input id="sim-vcc" type="text" inputmode="decimal" value="12"></label>
+      <label>R1 [kΩ]<input id="sim-r1" type="text" inputmode="decimal" value="100"></label>
+      <label>R2 [kΩ]<input id="sim-r2" type="text" inputmode="decimal" value="22"></label>
+      <label>RC [kΩ]<input id="sim-rc" type="text" inputmode="decimal" value="2.2"></label>
+      <label>RE [kΩ]<input id="sim-re" type="text" inputmode="decimal" value="1"></label>
+      <label>RL [kΩ]<input id="sim-rl" type="text" inputmode="decimal" value="10"></label>
+      <label>Cin [µF]<input id="sim-cin" type="text" inputmode="decimal" value="10"></label>
+      <label>Cout [µF]<input id="sim-cout" type="text" inputmode="decimal" value="10"></label>
+      <label>Amplitude [mVpk]<input id="sim-amp" type="text" inputmode="decimal" value="10"></label>
+      <label>Frequency [Hz]<input id="sim-freq" type="text" inputmode="decimal" value="1000"></label>
+    </div>
+
+    <div class="sim-actions">
+      <label>Analysis
+        <select id="sim-analysis" name="analysis">
+          <option value="op">.op (DC Operating Point)</option>
+          <option value="ac">.ac (Bode Plot)</option>
+          <option value="tran">.tran (Transient)</option>
+        </select>
+      </label>
+      <button type="button" id="sim-run">Run Simulation</button>
+    </div>
+
+    <div id="sim-status" class="status-box" data-source="ngspice">พร้อมรัน ngspice simulation</div>
+    <div id="sim-provenance" class="muted sim-provenance">Engine: ngspice · Model: Q2N3904_LAB04 · ผลลัพธ์มาจากการรันจริง ไม่ใช่ค่าฝังในโค้ด</div>
+
+    <div id="sim-error" class="error-box" role="alert" hidden></div>
+
+    <div id="sim-op" hidden>
+      <h3>DC Operating Point (SPICE .op)</h3>
+      <table>
+        <tr><th>ปริมาณ</th><th>ค่า</th><th>หน่วย</th></tr>
+        <tr><td>VB</td><td id="op-vb">-</td><td>V</td></tr>
+        <tr><td>VE</td><td id="op-ve">-</td><td>V</td></tr>
+        <tr><td>VC</td><td id="op-vc">-</td><td>V</td></tr>
+        <tr><td>VCE</td><td id="op-vce">-</td><td>V</td></tr>
+        <tr><td>IC</td><td id="op-ic">-</td><td>mA</td></tr>
+      </table>
+    </div>
+
+    <div id="sim-ac" class="chart-panel" hidden>
+      <h3>Bode Plot (.ac) — ngspice</h3>
+      <div class="chart-wrap"><canvas id="acChart"></canvas></div>
+    </div>
+
+    <div id="sim-tran" class="chart-panel" hidden>
+      <h3>Transient Waveform (.tran) — ngspice</h3>
+      <div class="chart-wrap"><canvas id="tranChart"></canvas></div>
+    </div>
+  </section>
 </main>
+<script src="{{ url_for('static', filename='chart.umd.min.js') }}"></script>
 </body>
 </html>
