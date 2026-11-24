@@ -68,18 +68,22 @@ python -m flask --app app run --debug
 python -m unittest discover -s tests -v
 ```
 
-ผลที่คาดหวัง: `Ran 38 tests ... OK`
+ผลที่คาดหวัง: `Ran 51 tests ... OK` (รวมเทสต์ Lab 03 เดิม + เทสต์ ngspice/API/UI/เอกสาร Lab 04)
 
 ## โครงสร้างโปรเจกต์
 
 ```
-app.py                  Flask routes (GET / และ POST /) + เลือกโหมดด้วย if/elif + `python app.py`
+app.py                  Flask routes (Lab 03) + POST /api/simulate (Lab 04 ngspice)
 start.bat               เปิดเซิร์ฟเวอร์และเปิดเบราว์เซอร์ให้ (Windows)
-dc_bias.py              สมการ 3 โหมด + validation + การตัดสิน region + as_dict()
-templates/index.html    ฟอร์มและตารางผลลัพธ์ (Jinja) — ไม่มีสมการฟิสิกส์
+dc_bias.py              สมการ 3 โหมด analytical (ไม่เปลี่ยนตาม Lab 03) + validation + region + as_dict()
+spice_engine.py         ngspice adapter: สร้าง netlist, รัน batch, parse .op/.ac/.tran
+templates/index.html    ฟอร์ม Lab 03 + ส่วน CE Amplifier Simulator (Jinja, ไม่มีสมการฟิสิกส์)
 static/style.css        รูปแบบหน้าจอ
+static/app.js           เรียก /api/simulate และวาดกราฟ Chart.js จากผลจริง
+static/chart.umd.min.js Chart.js 4.4.1 UMD (vendored)
 tests/test_dc_bias.py   เทสต์สมการและ validation (22 tests)
-tests/test_web.py       เทสต์ HTTP ผ่าน Flask test client (16 tests)
+tests/test_spice_engine.py  เทสต์ ngspice discovery/netlist/run/parse (7 tests, skip ถ้าไม่มี ngspice)
+tests/test_web.py       เทสต์ HTTP/UI/API/เอกสาร (22 tests)
 ```
 
 ## โหมดวงจร
@@ -186,6 +190,51 @@ VCC = 12 V, R1 = 100 kΩ, R2 = 22 kΩ, RC = 2.2 kΩ, RE = 1 kΩ, β = 100, VBE =
 ถ้าชั้น 1–5 ถูกทั้งหมดแต่หน้าจอไม่เปลี่ยน ปัญหาอยู่ที่ **การแสดงผล/cache** ไม่ใช่สมการ
 วิธีที่เร็วที่สุดในการแยกให้ขาดคือเทสต์ HTTP สองเคส (RE=1 กับ RE=2 แล้ว assert ว่า IC ต่างกัน)
 ซึ่งมีอยู่แล้วในโปรเจกต์นี้: `test_emitter_post_uses_re` และ `test_more_re_lowers_ic`
+
+## Lab 04 — CE Amplifier Simulator (ngspice)
+
+ส่วนนี้ต่อยอดจาก Lab 03 โดย **คงโหมด DC bias 3 แบบเดิม** และเพิ่ม CE Voltage Divider reference circuit ที่รันด้วย **ngspice จริง** (`.op`, `.ac`, `.tran`) ผ่าน `spice_engine.py` + `POST /api/simulate`
+
+### การติดตั้ง ngspice
+
+- ต้องมี ngspice ที่รัน batch mode ได้ (`ngspice_con.exe` หรือ `ngspice`)
+- โปรแกรมจะค้นหาอัตโนมัติจาก `NGSPICE_EXE`, PATH (`ngspice_con`/`ngspice`) และ path มาตรฐาน Windows
+- แนะนำตั้งค่า env var ถ้าติดตั้งนอก path มาตรฐาน:
+
+```powershell
+$env:NGSPICE_EXE="C:\path\to\Spice64\bin\ngspice_con.exe"
+python app.py
+```
+
+เครื่องที่ใช้ทดสอบงานนี้ติดตั้ง ngspice 47 (portable) ที่ `C:\Users\b6829643\AppData\Local\Tools\ngspice\Spice64\bin\ngspice_con.exe` และตรวจแล้วว่ารัน batch `.op/.ac/.tran` ได้จริง
+
+### Model / Provenance
+
+- โมเดล BJT ที่ใช้: `Q2N3904_LAB04` (NPN) ประกาศใน netlist ที่สร้างโดย `spice_engine.py`
+- พารามิเตอร์: `BF=200 IS=6.734f VAF=74.03 CJE=4.493p CJC=3.638p TF=301.2p TR=239.5n`
+- เป็นโมเดล 2N3904-like แบบระบุพารามิเตอร์ชัดเจนเพื่อ reproducibility ใน Lab นี้ **ไม่ใช่ manufacturer-certified SPICE card** และไม่ได้ hard-code ผลลัพธ์ simulation
+- ผล `.op/.ac/.tran` ที่แสดงใน UI มาจากการรัน ngspice จริงทุกครั้ง; ถ้า engine หาย/ผิดพลาด/timeout จะคืน `ok:false` พร้อมข้อความ error และไม่แสดงกราฟเก่าพร้อมสถานะสำเร็จ
+
+### B1–B8 Browser Acceptance (สรุป)
+
+รายละเอียดเต็มและหลักฐานอยู่ใน [`docs/validation.md`](docs/validation.md) หัวข้อ Lab 04
+
+| Case | เป้าหมาย | ผล |
+|---|---|---|
+| B1 | หน้าโหลดมี Lab 03 + ส่วน CE Amplifier ngspice | PASS |
+| B2 | `.op` รันจริง แสดง VB/VE/VC/VCE/IC + engine/model/run id | PASS |
+| B3 | `.ac` รันจริง แสดง Bode plot (gain/phase) | PASS |
+| B4 | `.tran` รันจริง แสดง Vin/Vout waveform | PASS |
+| B5 | เปลี่ยน amp/freq แล้วรันใหม่ ได้ผลใหม่จริง | PASS |
+| B6 | input ไม่ถูกต้อง (RE=0) แสดง error และไม่ค้างผลสำเร็จเก่า | PASS |
+| B7 | engine หาย/หาไม่พบ รายงาน error ชัดเจน ไม่คืนข้อมูลปลอม | PASS (ตรวจด้วย automated test + direct engine check) |
+| B8 | Lab 03 divider regression ยังคำนวณถูก (VCE 8.052 V, Active) | PASS |
+
+### หมายเหตุ Lab 04
+
+- Chart.js เป็นไฟล์ vendored ใน `static/chart.umd.min.js` (ไม่พึ่ง CDN ตอนรัน)
+- ผล analytical Lab 03 และผล SPICE Lab 04 แสดงแยกส่วนกันชัดเจน
+- ไฟล์ temp ของ ngspice สร้างใน temporary directory ต่อรัน และไม่ commit
 
 ## การเชื่อม Playwright MCP
 

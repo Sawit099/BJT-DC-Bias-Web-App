@@ -167,3 +167,25 @@ A5 — โหมด Fixed Bias, RB = 0:
 - ไม่ได้ทดสอบกับค่าจาก datasheet ของ BJT รุ่นจริง (เช่น 2N2222, BC547)
 - ไม่ได้ทดสอบอุณหภูมิหรือการเปลี่ยนแปลงของ β ตามกระแส
 - ไม่ได้ทดสอบพร้อมกันหลายผู้ใช้ (development server ไม่ได้ออกแบบมาสำหรับงานนั้น)
+
+
+## 8. Lab 04 — CE Amplifier Simulator (ngspice) B1–B8
+
+วิธีตรวจ: รัน Flask app ที่ `http://127.0.0.1:5000/` แล้วใช้ Playwright MCP/browser automation ควบคุมหน้าเว็บจริง กดรัน simulation และอ่านค่าจาก DOM/screenshot; B7 ตรวจเพิ่มด้วย automated test และ direct engine check (จำลอง ngspice ไม่พบ) เพราะเซิร์ฟเวอร์ที่รันอยู่ยังค้นหา ngspice จริงใน PATH ได้
+
+| Case | ขั้นตอน | ค่าที่สังเกต (จริง) | ผล | หลักฐาน |
+|---|---|---|---|---|
+| B1 | เปิดหน้าแรก | มีส่วน Lab 03 เดิม และส่วน `CE Amplifier Simulator (ngspice)` พร้อม input/freq/amp/Run Simulation/canvas | PASS | `docs/evidence/lab04-b2-op.png` |
+| B2 | เลือก `.op` กด Run Simulation | `VB=2.0507 V, VE=1.3795 V, VC=8.9790 V, VCE=7.5995 V, IC=1.4727 mA`, สถานะสำเร็จ Engine ngspice, Model Q2N3904_LAB04, Run ec29215cf704 | PASS | `docs/evidence/lab04-b2-op.png` |
+| B3 | เลือก `.ac` กด Run Simulation | สถานะ `สำเร็จ (ac)` Run 64c28b20c164, แสดง Bode chart (gain/phase) จาก ngspice จริง | PASS | `docs/evidence/lab04-b3-ac-chart.png` |
+| B4 | เลือก `.tran` กด Run Simulation | สถานะ `สำเร็จ (tran)` Run d064b6f47782, แสดงกราฟ Vin/Vout จาก ngspice จริง | PASS | `docs/evidence/lab04-b4-tran.png` |
+| B5 | เปลี่ยน `freq=5000 Hz`, `amp=20 mVpk` แล้วรัน `.tran` ใหม่ | สถานะ `สำเร็จ (tran)` Run 63b2965e276a (run id เปลี่ยน) กราฟอัปเดตจากการรันใหม่ | PASS | `docs/evidence/lab04-b5-tran-freq5k.png` |
+| B6 | ตั้ง `RE=0` แล้วรัน | สถานะ `Simulation ล้มเหลว`, error `RE ต้องมีค่ามากกว่า 0`, ตาราง/กราฟ SPICE ถูกซ่อน (ไม่มี stale success) | PASS | `docs/evidence/lab04-b6-invalid.png` |
+| B7 | จำลอง ngspice ไม่พบ (`NGSPICE_EXE` ผิด + ไม่มีใน PATH/common paths) | ได้ `NgspiceNotFoundError` พร้อมข้อความแนะนำตั้ง `NGSPICE_EXE` และรายการ path ที่ตรวจ; API path คืน `ok:false` (ยืนยันโดย `tests.test_web.TestSpiceApi.test_missing_ngspice_reports_error`) | PASS | direct engine check + automated test |
+| B8 | คำนวณ Lab 03 Divider ค่าอ้างอิงเดิม | ผล `VTH=2.164 V, RTH=18.033 kΩ, VB=1.942 V, VE=1.242 V, VC=9.294 V, VCE=8.052 V, IC=1.230 mA, Active` | PASS | `docs/evidence/lab04-b8-regression.png` |
+
+### หมายเหตุ Lab 04
+
+- ผล SPICE เป็นค่าจาก ngspice จริงของโมเดล `Q2N3904_LAB04` ที่ประกาศชัดเจนใน `spice_engine.py`; ไม่ใช่ค่าจาก datasheet จริงของอุปกรณ์เฉพาะรุ่น
+- B7 ไม่ได้ทำโดยการลบ ngspice ออกจากเครื่อง แต่ตรวจด้วย mock/direct check และ unit test เพื่อหลีกเลี่ยงการกระทบสภาพแวดล้อม
+- ไม่ได้ทดสอบ AC ครบทุก bias mode ตามขอบเขต v1 (จำกัด CE Voltage Divider reference circuit)

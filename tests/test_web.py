@@ -181,3 +181,10 @@ class TestSimulatorUi(unittest.TestCase):
         self.assertIn("fetch('/api/simulate'", src)
         self.assertIn("clearResults", src)
         self.assertNotIn("hardcoded", src.lower())
+
+
+class TestLab04Docs(unittest.TestCase):
+    def test_readme_mentions_ngspice_and_b1_b8(self):
+        text = (ROOT / "README.md").read_text(encoding="utf-8")
+        for token in ["ngspice", "B1", "B8", "Q2N3904_LAB04"]:
+            self.assertIn(token, text)
