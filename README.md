@@ -4,7 +4,7 @@ Flask Web Application สำหรับคำนวณ **DC Operating Point** �
 **3 แบบ**: **Fixed Bias**, **Emitter Bias** และ **Voltage-Divider Bias** — เลือกโหมดในฟอร์ม
 กรอกค่าอุปกรณ์ แล้ว Python Backend คำนวณ VB, VE, VC, VCE, IC, IB, IE ส่งกลับมาแสดงพร้อมหน่วย
 
-สร้างเป็นผลงาน Lab 02–03 รายวิชา ENG29 2121 Computer Programming for Electrical Engineers
+สร้างเป็นผลงาน Lab 02–04 รายวิชา ENG29 2121 Computer Programming for Electrical Engineers
 
 ## ลิงก์งานส่ง (Lab 03–04)
 
