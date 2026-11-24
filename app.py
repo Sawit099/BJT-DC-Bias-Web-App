@@ -3,10 +3,12 @@
 Routes only: parsing and physics live in :mod:`dc_bias`.
 """
 
+import math
 import os
 
-from flask import Flask, render_template, request
+from flask import Flask, jsonify, render_template, request
 
+import spice_engine
 from dc_bias import (
     ValidationError,
     calculate,
@@ -92,6 +94,83 @@ def calculate_view():
         return _render(mode, request.form, errors={exc.field: exc.message})
 
     return _render(mode, request.form, result=result.as_dict())
+
+
+def _sim_payload() -> dict:
+    data = request.get_json(silent=True)
+    if isinstance(data, dict):
+        return data
+    return request.form.to_dict()
+
+
+def _sim_float(payload: dict, key: str, label: str) -> float:
+    raw = payload.get(key)
+    if raw is None or str(raw).strip() == "":
+        raise spice_engine.NgspiceError(f"{label} ต้องไม่เว้นว่าง")
+    try:
+        value = float(raw)
+    except (TypeError, ValueError) as exc:
+        raise spice_engine.NgspiceError(f"{label} ต้องเป็นตัวเลข") from exc
+    if not math.isfinite(value):
+        raise spice_engine.NgspiceError(f"{label} ต้องเป็นตัวเลขที่จำกัด (finite)")
+    return value
+
+
+@app.post("/api/simulate")
+def simulate_view():
+    payload = _sim_payload()
+    analysis = str(payload.get("analysis", "op")).strip().lower()
+    if analysis not in {"op", "ac", "tran"}:
+        return jsonify(
+            {
+                "ok": False,
+                "analysis": analysis,
+                "engine": "ngspice",
+                "model": spice_engine.DEFAULT_MODEL_NAME,
+                "error": "analysis ต้องเป็น op, ac หรือ tran",
+            }
+        )
+
+    try:
+        inp = spice_engine.CEInput(
+            vcc=_sim_float(payload, "vcc", "VCC"),
+            r1k=_sim_float(payload, "r1", "R1"),
+            r2k=_sim_float(payload, "r2", "R2"),
+            rck=_sim_float(payload, "rc", "RC"),
+            rek=_sim_float(payload, "re", "RE"),
+            rlk=_sim_float(payload, "rl", "RL"),
+            cin_u=_sim_float(payload, "cin", "Cin"),
+            cout_u=_sim_float(payload, "cout", "Cout"),
+            vin_mvp=_sim_float(payload, "amp", "Amplitude"),
+            freq_hz=_sim_float(payload, "freq", "Frequency"),
+        )
+        inp.validate()
+        if analysis == "op":
+            result = spice_engine.run_op(inp)
+        elif analysis == "ac":
+            result = spice_engine.run_ac(inp)
+        else:
+            result = spice_engine.run_tran(inp)
+        return jsonify(
+            {
+                "ok": True,
+                "analysis": analysis,
+                "engine": result.engine,
+                "model": result.model,
+                "run_id": result.run_id,
+                analysis: result.as_dict(),
+            }
+        )
+    except spice_engine.NgspiceError as exc:
+        return jsonify(
+            {
+                "ok": False,
+                "analysis": analysis,
+                "engine": "ngspice",
+                "model": spice_engine.DEFAULT_MODEL_NAME,
+                "error": str(exc),
+            }
+        )
 
 
 if __name__ == "__main__":

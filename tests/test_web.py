@@ -1,6 +1,8 @@
 import unittest
 from pathlib import Path
+from unittest import mock
 
+import spice_engine
 from app import app
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -128,3 +130,34 @@ class TestSharedResultContract(unittest.TestCase):
         self.assertNotIn("result['ic_a']", source)
         self.assertNotIn("result['ib_a']", source)
         self.assertNotIn("result['ie_a']", source)
+
+
+class TestSpiceApi(unittest.TestCase):
+    def setUp(self):
+        self.client = app.test_client()
+        self.payload = {
+            "analysis": "op",
+            "vcc": "12",
+            "r1": "100",
+            "r2": "22",
+            "rc": "2.2",
+            "re": "1",
+            "rl": "10",
+            "cin": "10",
+            "cout": "10",
+            "amp": "10",
+            "freq": "1000",
+        }
+
+    def test_invalid_re_returns_ok_false(self):
+        res = self.client.post("/api/simulate", json={**self.payload, "re": "0"})
+        data = res.get_json()
+        self.assertEqual(res.status_code, 200)
+        self.assertFalse(data["ok"])
+        self.assertIn("RE", data["error"])
+
+    def test_missing_ngspice_reports_error(self):
+        with mock.patch("app.spice_engine.find_ngspice", side_effect=spice_engine.NgspiceNotFoundError("not found")):
+            res = self.client.post("/api/simulate", json=self.payload)
+        data = res.get_json()
+        self.assertFalse(data["ok"])
