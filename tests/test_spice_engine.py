@@ -50,6 +50,9 @@ class TestAcRun(unittest.TestCase):
         self.assertEqual(len(r.phase_deg), len(r.gain_db))
         self.assertTrue(any(f >= 900 and f <= 1100 for f in r.freq_hz))
         self.assertTrue(any(g > 0 for g in r.gain_db))
+        # ngspice vp() is radians; the adapter must expose degrees.
+        self.assertTrue(any(abs(p) > 90.0 for p in r.phase_deg))
+        self.assertTrue(all(abs(p) <= 360.0 for p in r.phase_deg))
 
 
 @unittest.skipUnless(se.ngspice_available(), "ngspice not installed")

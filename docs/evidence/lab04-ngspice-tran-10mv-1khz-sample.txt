@@ -1,0 +1,44 @@
+analysis: .tran
+input: VCC=12.0 R1=100.0k R2=22.0k RC=2.2k RE=1.0k RL=10.0k Cin=10.0u Cout=10.0u Amp=10.0mVpk Freq=1000.0Hz
+model: Q2N3904_LAB04
+model card: .model Q2N3904_LAB04 NPN(BF=200 IS=6.734f VAF=74.03 CJE=4.493p CJC=3.638p TF=301.2p TR=239.5n)
+--- ngspice run.log ---
+Note: No compatibility mode selected!
+
+
+Circuit: * lab 04 ce voltage divider amplifier
+
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+vcc                                         12
+b                                      2.05072
+c                                      8.97896
+e                                      1.37948
+in                                           0
+out                                          0
+vin#branch                                   0
+vcc#branch                         -0.00147269
+
+
+No. of Data Rows : 1008
+ngspice-47 done
+--- tran.txt: 1008 rows ---
+first 5 rows:
+0.00000000e+00  0.00000000e+00  0.00000000e+00  0.00000000e+00
+5.00000000e-08  3.14159260e-06  5.00000000e-08 -2.03551588e-05
+1.00000000e-07  6.28318489e-06  1.00000000e-07 -2.20096081e-05
+2.00000000e-07  1.25663673e-05  2.00000000e-07 -3.25433052e-05
+4.00000000e-07  2.51327148e-05  4.00000000e-07 -5.51388561e-05
+last 5 rows:
+4.98140000e-03 -1.16601400e-03  4.98140000e-03  2.04031707e-03
+4.98640000e-03 -8.53473649e-04  4.98640000e-03  1.49006718e-03
+4.99140000e-03 -5.40091018e-04  4.99140000e-03  9.38431408e-04
+4.99570000e-03 -2.70144100e-04  4.99570000e-03  4.63227030e-04
+5.00000000e-03 -1.22464680e-17  5.00000000e-03 -1.22372748e-05

@@ -1,0 +1,6 @@
+command: "C:\Users\b6829643\Documents\GitHub\BJT DC Bias Web App\.opencode\skills\impeccable\scripts\impeccable.cmd" detect --json --viewport 390x844 http://127.0.0.1:5000/
+exit: 0
+stdout:
+[]
+stderr:
+

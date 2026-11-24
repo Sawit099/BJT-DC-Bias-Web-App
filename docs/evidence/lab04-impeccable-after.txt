@@ -1,0 +1,1 @@
+(no findings; detector output empty = 0 anti-patterns, 0 advisories)

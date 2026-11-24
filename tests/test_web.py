@@ -183,6 +183,45 @@ class TestSimulatorUi(unittest.TestCase):
         self.assertNotIn("hardcoded", src.lower())
 
 
+class TestSimulatorUiPolish(unittest.TestCase):
+    """Regression tests for the Impeccable critique fixes."""
+
+    def setUp(self):
+        self.client = app.test_client()
+
+    def test_status_box_is_announced_to_assistive_tech(self):
+        body = self.client.get("/").get_data(as_text=True)
+        self.assertIn('id="sim-status"', body)
+        self.assertIn('aria-live="polite"', body)
+
+    def test_app_js_formats_chart_tick_labels(self):
+        src = (ROOT / "static" / "app.js").read_text(encoding="utf-8")
+        self.assertIn("maxTicksLimit", src)
+        self.assertIn("toFixed(2)", src)
+
+    def test_app_js_marks_invalid_sim_field(self):
+        src = (ROOT / "static" / "app.js").read_text(encoding="utf-8")
+        self.assertIn("aria-invalid", src)
+        self.assertIn("sim-re", src)
+
+    def test_time_tick_uses_real_time_labels_not_point_indices(self):
+        src = (ROOT / "static" / "app.js").read_text(encoding="utf-8")
+        self.assertIn("Number(timeMs[index])", src)
+        self.assertIn("formatTimeTick(value, index, t)", src)
+
+    def test_sim_op_table_uses_thead(self):
+        body = self.client.get("/").get_data(as_text=True)
+        sim_op = body.split('id="sim-op"', 1)[1].split("</table>", 1)[0]
+        self.assertIn("<thead>", sim_op)
+        self.assertIn('scope="col"', sim_op)
+
+    def test_mobile_mode_bar_stacks(self):
+        css = (ROOT / "static" / "style.css").read_text(encoding="utf-8")
+        mobile = css.split("@media (max-width: 560px)", 1)[1]
+        self.assertIn(".mode-bar", mobile)
+        self.assertIn("flex-direction: column", mobile)
+
+
 class TestLab04Docs(unittest.TestCase):
     def test_readme_mentions_ngspice_and_b1_b8(self):
         text = (ROOT / "README.md").read_text(encoding="utf-8")

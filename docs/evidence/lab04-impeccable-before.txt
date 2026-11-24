@@ -1,0 +1,9 @@
+0 anti-patterns found.
+
+── Advisory (not counted as failures) ──
+
+http://127.0.0.1:5000/
+  [straggler] "ด้านบน" alone on the last of 2 lines (7% of the measure)
+    → The last line of this paragraph holds one word, which leaves a hole under the block. Set text-wrap: pretty on body copy (Chrome, Safari) to pull a word down beside it. Where a browser ignores it, edit the last sentence or bind the last two words with a no-break space. Keep it if the break is intended.
+
+1 advisory note. Suppress with --no-advisory.

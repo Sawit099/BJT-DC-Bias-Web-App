@@ -39,7 +39,7 @@ VCE = VC − VE                = 8.0520 V
 ```
 python -m unittest discover -s tests -v
 
-Ran 38 tests in 0.05s
+Ran 57 tests in 0.41s
 
 OK
 ```
@@ -47,7 +47,10 @@ OK
 | ไฟล์ | จำนวน | สิ่งที่ตรวจ |
 |---|---|---|
 | `tests/test_dc_bias.py` | 22 | ค่าสมการอ้างอิง, region, kΩ→Ω, whitespace, comma decimal, validation, β = 1e6, nan/inf, Fixed/Emitter, `as_dict()`, เกณฑ์ 0.2 V, parse ตามโหมด |
-| `tests/test_web.py` | 16 | GET ฟอร์ม, POST แสดงผล, ฟิลด์หาย, ค่าผิด, POST ว่าง, เลือกโหมด, โหมดไม่รู้จัก, ผลรอบก่อนไม่ค้าง, error ระบุโหมด, template อ่านคีย์ dict |
+| `tests/test_spice_engine.py` | 7 | model constant, ngspice discovery, netlist, `.op` parse, `.ac` parse (รวม phase เป็นองศา), `.tran` parse, run id |
+| `tests/test_web.py` | 28 | GET/POST ฟอร์ม Lab 03, validation, โหมด, `/api/simulate`, UI simulator, Chart.js, เอกสาร, และ regression ของ Impeccable fixes (aria-live, tick format, thead, mobile mode bar, time label) |
+
+> 38 เทสต์แรกเป็นของ Lab 03; Lab 04 เพิ่ม 19 เทสต์ (engine 7 + web/UI/API 12) รวมเป็น 57 เทสต์
 
 ## 3. เคสนอกช่วง Forward-Active (ต้องมี warning)
 
@@ -171,21 +174,61 @@ A5 — โหมด Fixed Bias, RB = 0:
 
 ## 8. Lab 04 — CE Amplifier Simulator (ngspice) B1–B8
 
-วิธีตรวจ: รัน Flask app ที่ `http://127.0.0.1:5000/` แล้วใช้ Playwright MCP/browser automation ควบคุมหน้าเว็บจริง กดรัน simulation และอ่านค่าจาก DOM/screenshot; B7 ตรวจเพิ่มด้วย automated test และ direct engine check (จำลอง ngspice ไม่พบ) เพราะเซิร์ฟเวอร์ที่รันอยู่ยังค้นหา ngspice จริงใน PATH ได้
+### 8.1 วิธีตรวจและสภาพแวดล้อม
 
-| Case | ขั้นตอน | ค่าที่สังเกต (จริง) | ผล | หลักฐาน |
-|---|---|---|---|---|
-| B1 | เปิดหน้าแรก | มีส่วน Lab 03 เดิม และส่วน `CE Amplifier Simulator (ngspice)` พร้อม input/freq/amp/Run Simulation/canvas | PASS | `docs/evidence/lab04-b2-op.png` |
-| B2 | เลือก `.op` กด Run Simulation | `VB=2.0507 V, VE=1.3795 V, VC=8.9790 V, VCE=7.5995 V, IC=1.4727 mA`, สถานะสำเร็จ Engine ngspice, Model Q2N3904_LAB04, Run ec29215cf704 | PASS | `docs/evidence/lab04-b2-op.png` |
-| B3 | เลือก `.ac` กด Run Simulation | สถานะ `สำเร็จ (ac)` Run 64c28b20c164, แสดง Bode chart (gain/phase) จาก ngspice จริง | PASS | `docs/evidence/lab04-b3-ac-chart.png` |
-| B4 | เลือก `.tran` กด Run Simulation | สถานะ `สำเร็จ (tran)` Run d064b6f47782, แสดงกราฟ Vin/Vout จาก ngspice จริง | PASS | `docs/evidence/lab04-b4-tran.png` |
-| B5 | เปลี่ยน `freq=5000 Hz`, `amp=20 mVpk` แล้วรัน `.tran` ใหม่ | สถานะ `สำเร็จ (tran)` Run 63b2965e276a (run id เปลี่ยน) กราฟอัปเดตจากการรันใหม่ | PASS | `docs/evidence/lab04-b5-tran-freq5k.png` |
-| B6 | ตั้ง `RE=0` แล้วรัน | สถานะ `Simulation ล้มเหลว`, error `RE ต้องมีค่ามากกว่า 0`, ตาราง/กราฟ SPICE ถูกซ่อน (ไม่มี stale success) | PASS | `docs/evidence/lab04-b6-invalid.png` |
-| B7 | จำลอง ngspice ไม่พบ (`NGSPICE_EXE` ผิด + ไม่มีใน PATH/common paths) | ได้ `NgspiceNotFoundError` พร้อมข้อความแนะนำตั้ง `NGSPICE_EXE` และรายการ path ที่ตรวจ; API path คืน `ok:false` (ยืนยันโดย `tests.test_web.TestSpiceApi.test_missing_ngspice_reports_error`) | PASS | direct engine check + automated test |
-| B8 | คำนวณ Lab 03 Divider ค่าอ้างอิงเดิม | ผล `VTH=2.164 V, RTH=18.033 kΩ, VB=1.942 V, VE=1.242 V, VC=9.294 V, VCE=8.052 V, IC=1.230 mA, Active` | PASS | `docs/evidence/lab04-b8-regression.png` |
+- **วันที่ตรวจ:** 2026-11-24
+- **แอป:** Flask dev server ที่ <http://127.0.0.1:5000/> (เปิดค้างระหว่างตรวจ)
+- **Browser:** Playwright MCP ควบคุม Chrome จริง — เปิดหน้าใหม่, fill/select, กดปุ่มจริง, อ่านค่าจาก DOM, วัด viewport และบันทึก screenshot
+- **Engine:** ngspice 47 (portable) ที่ `C:\Users\b6829643\AppData\Local\Tools\ngspice\Spice64\bin\ngspice_con.exe`; รัน batch ด้วย `ngspice_con.exe -b -o run.log circuit.cir` และยืนยันจาก log ว่า `ngspice-47 done`
+- **B7 (engine หาย):** ตรวจด้วย automated test + direct engine check โดยชี้ `NGSPICE_EXE` ไป path ที่ไม่มีและปิดการค้นหาใน PATH/common paths — **ไม่ได้ถอน ngspice ออกจากเครื่อง** เพื่อไม่กระทบสภาพแวดล้อม
+- **UI review:** Impeccable skill v4.10.0 (ติดตั้งแบบ project-scoped), dual-agent critique (Assessment A design review + Assessment B detector/browser), bundled detector และ Playwright MCP
+- **หลักการ:** รายงานผลรอบแรกก่อน แล้วจึงแก้ UI; ไม่มีการแก้สมการฟิสิกส์หรือ `dc_bias.py` ระหว่าง Lab 04
 
-### หมายเหตุ Lab 04
+### 8.2 ตาราง B1–B8 (ผลจริงจาก browser)
 
-- ผล SPICE เป็นค่าจาก ngspice จริงของโมเดล `Q2N3904_LAB04` ที่ประกาศชัดเจนใน `spice_engine.py`; ไม่ใช่ค่าจาก datasheet จริงของอุปกรณ์เฉพาะรุ่น
-- B7 ไม่ได้ทำโดยการลบ ngspice ออกจากเครื่อง แต่ตรวจด้วย mock/direct check และ unit test เพื่อหลีกเลี่ยงการกระทบสภาพแวดล้อม
-- ไม่ได้ทดสอบ AC ครบทุก bias mode ตามขอบเขต v1 (จำกัด CE Voltage Divider reference circuit)
+| Case | Method | Input | Expected/Reference | Observed | Evidence | Status |
+|---|---|---|---|---|---|---|
+| **B1 — Regression** | Playwright MCP: เลือก 3 โหมด, กรอกค่า Lab 03, กด Calculate จริง | Divider: VCC 12 V, R1 100 kΩ, R2 22 kΩ, RC 2.2 kΩ, RE 1 kΩ, β 100, VBE 0.70 V; Fixed: RB 1000 kΩ; Emitter: RB 1000 kΩ, RE 1 kΩ | Divider IC 1.2299 mA, VCE 8.0522 V; Fixed IC 1.1300 mA, VCE 9.5140 V; Emitter IC 1.0263 mA, VCE 8.7054 V; ทั้งสามเป็น Active | Divider IC 1.230 mA, VCE 8.052 V, Active; Fixed IC 1.130 mA, VCE 9.514 V, VE 0.000 V; Emitter IC 1.026 mA, VCE 8.705 V; หน้าเว็บยังทำงาน | [`lab04-b1-regression-playwright.png`](evidence/lab04-b1-regression-playwright.png); ตาราง §5 A1–A5; ค่าจาก DOM | **PASS** |
+| **B2 — DC SPICE** | Playwright MCP: เลือก `.op`, กด Run Simulation | CE Voltage Divider reference: VCC 12 V, R1 100 kΩ, R2 22 kΩ, RC 2.2 kΩ, RE 1 kΩ, RL 10 kΩ, Cin/Cout 10 µF | ค่าจาก ngspice `.op` จริง; ต้องแสดง VB/VE/VC/VCE/IC + Model + Run Status | VB 2.0507 V, VE 1.3795 V, VC 8.9790 V, VCE 7.5995 V, IC 1.4727 mA; สถานะ `สำเร็จ (op)`; Engine `ngspice`; Model `Q2N3904_LAB04`; Run `428ae430ffa8` | [`lab04-b2-op-playwright.png`](evidence/lab04-b2-op-playwright.png); [`lab04-ngspice-op.log`](evidence/lab04-ngspice-op.log) | **PASS** |
+| **B3 — Change RE** | Playwright MCP: เปลี่ยน **เฉพาะ RE** 1 kΩ → 2 kΩ แล้วรัน `.op` ใหม่ | เหมือน B2 แต่ RE 2 kΩ | Operating point ต้องเปลี่ยนชัดเจน; RE เพิ่ม → IC ลด, VCE เพิ่ม | IC 1.4727 → **0.8213 mA**; VCE 7.5995 → **8.9596 V**; VB 2.0507 → 2.1054 V; VE 1.3795 → 1.4512 V; VC 8.9790 → 10.4108 V; Run เปลี่ยนเป็น `20fec1245fdb` | [`lab04-b2-op-playwright.png`](evidence/lab04-b2-op-playwright.png) → [`lab04-b3-re2-op-playwright.png`](evidence/lab04-b3-re2-op-playwright.png) | **PASS** |
+| **B4 — AC** | Playwright MCP: เลือก `.ac`, กด Run Simulation | CE reference; AC source 1 V; 10 Hz–1 MHz; 20 points/decade | Bode plot ต้องมี Frequency axis / Gain magnitude / Phase จาก run จริง; 101 points; gain ~4.8–4.9 dB; phase ~−180° (วงจรกลับเฟส) | 101 points; gain **4.7979–4.9108 dB**; phase **−181.87° ถึง −167.10°** (แปลงจาก `vp()` radians เป็นองศาและ unwrap); x ticks `10, 100, 1k, 10k, 100k, 1M`; สถานะ `สำเร็จ (ac)`, Run `237f289e52ee` | [`lab04-b4-ac-playwright.png`](evidence/lab04-b4-ac-playwright.png); [`lab04-ngspice-ac-sample.txt`](evidence/lab04-ngspice-ac-sample.txt) | **PASS** |
+| **B5 — Transient** | Playwright MCP: เลือก `.tran`, amp 10 mVpk, freq 1 kHz | CE reference; amplitude 10 mVpk; frequency 1000 Hz | Vin/Vout ตามเวลา; Vin ~10 mV peak; Vout ขยายและกลับเฟส ~180°; กราฟต้องมาจาก run จริง | 1008 points; Vin max **0.0099996 V**; Vout max **0.017627 V**; correlation Vin/Vout **−0.999997** (กลับเฟส); x ticks 0.00–4.29 ms; Run `a42945a4aedc` | [`lab04-b5-tran-playwright.png`](evidence/lab04-b5-tran-playwright.png); [`lab04-ngspice-tran-10mv-1khz-sample.txt`](evidence/lab04-ngspice-tran-10mv-1khz-sample.txt) | **PASS** |
+| **B6 — Change Source** | Playwright MCP: เปลี่ยน amp เป็น 20 mVpk และ freq เป็น 5 kHz แล้วรัน `.tran` ใหม่ | CE reference; amplitude 20 mVpk; frequency 5000 Hz | Waveform ต้องเปลี่ยนตาม source; ห้าม hard-code; run id ต้องเปลี่ยน | 5008 points; Vin max **0.02 V**; Vout max **0.03520 V**; x ticks 0.00–4.29 ms; Run เปลี่ยนเป็น `0dbd5d40304a`; กราฟอัปเดตจริง | [`lab04-b6-source-playwright.png`](evidence/lab04-b6-source-playwright.png); [`lab04-ngspice-tran-20mv-5khz-sample.txt`](evidence/lab04-ngspice-tran-20mv-5khz-sample.txt) | **PASS** |
+| **B7 — Invalid / Fail** | Playwright MCP: ตั้ง RE = 0 แล้วรัน `.op`; เสริมด้วย automated test สำหรับ engine หาย | RE 0 kΩ (ค่าอื่นถูกต้อง); engine missing จำลองด้วย mock | ต้องมี Error/Warning ชัดเจน, ไม่ค้างผลสำเร็จเก่า, หน้าเว็บไม่ล่ม | สถานะ `การจำลองล้มเหลว`; error `RE ต้องมีค่ามากกว่า 0`; `aria-invalid="true"` และ focus ที่ `#sim-re`; `.op/.ac/.tran` ถูกซ่อนทั้งหมด; HTTP 200; engine missing คืน `ok:false` พร้อมคำแนะนำ `NGSPICE_EXE` | [`lab04-b7-invalid-playwright.png`](evidence/lab04-b7-invalid-playwright.png); `tests.test_web.TestSpiceApi.test_missing_ngspice_reports_error`; `tests.test_spice_engine.TestFindNgspice` | **PASS** |
+| **B8 — UI Desktop/Mobile** | Playwright MCP: วัด viewport 1280×900 และ 390×844; เปลี่ยนโหมด; ตรวจ console/overflow | หน้า default; สลับ Divider/Fixed/Emitter; ตรวจกราฟ AC/Tran | Desktop + Phone อ่านได้ ไม่ถูกตัด/ทับ; สลับโหมดได้; ไม่มี horizontal overflow | Desktop `scrollWidth 1265 < 1280`; Mobile `scrollWidth 375 < 390`; ไม่มี horizontal overflow; ปุ่ม `เปลี่ยนโหมด` บน mobile เป็น 309×47.6 px (บรรทัดเดียว); canvas 662×320 desktop / 309×260 mobile; console 0 errors | [`lab04-b8-desktop-playwright.png`](evidence/lab04-b8-desktop-playwright.png); [`lab04-b8-mobile-playwright.png`](evidence/lab04-b8-mobile-playwright.png) | **PASS** |
+
+> Run id เปลี่ยนทุกครั้งที่รัน; ค่าที่บันทึกเป็น run id ของรอบที่ใช้เก็บ screenshot/ค่าจริง ไม่ใช่ค่าคงที่ในโค้ด
+
+### 8.3 ngspice, BJT model และการเทียบกับ Lab 03
+
+- **ngspice:** 47; log แสดง `ngspice-47 done`; รัน batch mode ผ่าน `subprocess.run(..., shell=False, timeout=30s)` ใน temporary directory ต่อการรัน
+- **BJT model:** `Q2N3904_LAB04` ประกาศใน netlist:
+  `.model Q2N3904_LAB04 NPN(BF=200 IS=6.734f VAF=74.03 CJE=4.493p CJC=3.638p TF=301.2p TR=239.5n)`
+  เป็นโมเดล 2N3904-like ที่ระบุพารามิเตอร์ชัดเจนเพื่อ reproducibility **ไม่ใช่ manufacturer-certified SPICE card** และไม่ได้ hard-code ผลลัพธ์
+- **ทำไม SPICE ไม่เท่ากับ Lab 03 analytical:** Lab 03 ใช้ β = 100 และ VBE = 0.70 V คงที่; SPICE ใช้ `BF=200`, `IS=6.734f`, `VAF=74.03` ทำให้กระแสและ VBE ต่างจากสมการมือตามธรรมชาติ (SPICE IC 1.4727 mA vs analytical 1.230 mA; VCE 7.5995 V vs 8.052 V) — เป็นความต่างของแบบจำลอง ไม่ใช่ bug
+- **Phase:** ngspice `vp()` คืนค่าเป็น radians; adapter แปลงเป็นองศาและ unwrap ±180° ก่อนส่งให้ Chart.js จึงแสดง phase ต่อเนื่องในช่วง −181.87° ถึง −167.10° ไม่ใช่ค่า radians ดิบ
+- **Provenance ใน UI:** ทุกผลแสดง Engine, Model และ Run id; ถ้า engine หาย/ผิดพลาด/timeout จะคืน `ok:false` พร้อม error และซ่อนผลเก่า ไม่มี stale success
+
+### 8.4 Impeccable — before/after และสิ่งที่ยังไม่แก้
+
+- ติดตั้ง skill แบบ project-scoped: `npx impeccable install --project --providers=opencode`
+- ใช้ **dual-agent critique**: Assessment A (design review) + Assessment B (detector/browser) แยกกัน แล้วสังเคราะห์; รายละเอียดอยู่ใน [`docs/evidence/lab04-impeccable-critique.md`](evidence/lab04-impeccable-critique.md)
+- **ก่อนแก้:** detector ตรวจ URL ได้ 0 anti-patterns แต่มี 1 advisory (`straggler "ด้านบน"`); critique ยังพบ chart tick เป็น float ดิบ, AC label ชนกัน, ปุ่ม `เปลี่ยนโหมด` ขึ้น 3 บรรทัดบน mobile, error ไม่ถูก announce/focus
+- **หลังแก้:** `detect --json` บน URL ที่ 1280 px และ 390 px คืน `[]` (ไม่มี finding); source scan ยังรายงาน `flat-type-hierarchy` 1 รายการ แต่เป็น **false positive** เพราะ detector อ่าน Jinja `url_for()` เป็น path ไม่ได้ จึงวัดฟอนต์เป็น 16/16/16 แทนค่าจริง 24/18.4/16 px
+- **หลักฐาน before/after:** [`lab04-impeccable-before.txt`](evidence/lab04-impeccable-before.txt), [`lab04-impeccable-after.txt`](evidence/lab04-impeccable-after.txt), [`lab04-impeccable-url-desktop.json`](evidence/lab04-impeccable-url-desktop.json), [`lab04-impeccable-url-mobile.json`](evidence/lab04-impeccable-url-mobile.json); ภาพ before: [`lab04-impeccable-before-tran.png`](evidence/lab04-impeccable-before-tran.png), [`lab04-impeccable-before-ac.png`](evidence/lab04-impeccable-before-ac.png), [`lab04-impeccable-before-mobile.png`](evidence/lab04-impeccable-before-mobile.png), [`lab04-impeccable-before-error.png`](evidence/lab04-impeccable-before-error.png); ภาพ after: B4/B5/B7/B8 ข้างต้น
+- **สิ่งที่ยังไม่แก้ (ตั้งใจ/นอกขอบเขต v1):** ไม่มี schematic/node map; ฟอร์ม analytical กับ simulator แยกกันโดยเจตนา; การเปลี่ยนโหมด Lab 03 ยัง reset ค่า input ตามพฤติกรรมเดิม; chart เป็น canvas (มี `aria-label` จากข้อมูลจริงแล้ว แต่ยังไม่มี data table เต็ม); label `Engine/Model/Run` คงเป็นอังกฤษเพราะใบงานกำหนดให้แสดง Model และ Run Status; การ์ดกว้างสูงสุด 720 px เพื่อรักษาความยาวบรรทัดและกราฟ
+
+### 8.5 ข้อจำกัดของ Lab 04
+
+- Simulator v1 จำกัดที่ **CE Voltage Divider reference circuit** วงจรเดียว; ไม่ได้ทำ AC/tran ครบทุก bias mode
+- โมเดล BJT เป็น generic 2N3904-like ไม่ได้ calibrate กับ datasheet ของอุปกรณ์จริง
+- ไม่ได้ทดสอบอุณหภูมิ, การเปลี่ยน β ตามกระแส, หรือ multi-user load
+- B7 ตรวจ engine หายด้วย mock/direct check ไม่ได้ถอน ngspice ออกจากเครื่องจริง
+- Chart ไม่มี data table เต็มรูปแบบ; ค่าดิบยังดูได้จาก ngspice sample/log และ API
+
+### 8.6 สรุป Lab 04
+
+- **B1–B8 ผ่านทั้งหมด** ด้วย Playwright MCP บน Chrome จริง (B7 engine หายใช้ automated test เสริม)
+- **57 tests OK** (`python -m unittest discover -s tests -v`)
+- ผล `.op/.ac/.tran` มาจาก ngspice จริงทุกครั้ง; ไม่มีค่าผลลัพธ์ hard-code; invalid/fail ไม่ค้างกราฟสำเร็จเก่า
+- Impeccable ใช้จริงทั้ง critique/detector/browser และมี before/after หลักฐาน; ข้อจำกัดที่เหลือระบุไว้อย่างตรงไปตรงมา

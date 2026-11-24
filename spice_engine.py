@@ -340,6 +340,29 @@ def run_op(inp: CEInput) -> OpResult:
         )
 
 
+def _unwrap_phase_deg(values: list[float]) -> list[float]:
+    """Convert ngspice vp() radians to degrees and unwrap ±180° jumps.
+
+    ngspice's ``vp()`` returns radians. A CE amplifier is inverting, so the
+    phase sits near ±180° and the raw value wraps. Unwrapping keeps the trace
+    continuous and readable while preserving the physical phase.
+    """
+    out: list[float] = []
+    offset = 0.0
+    prev: float | None = None
+    for radians in values:
+        deg = radians * 180.0 / math.pi
+        if prev is not None:
+            delta = deg - prev
+            if delta > 180.0:
+                offset -= 360.0
+            elif delta < -180.0:
+                offset += 360.0
+        out.append(deg + offset)
+        prev = deg
+    return out
+
+
 def run_ac(
     inp: CEInput,
     fstart: float = 10.0,
@@ -356,7 +379,7 @@ def run_ac(
         cols = _parse_wrdata(os.path.join(run_dir, "ac.txt"), expected_pairs=2)
         freq_hz = cols[0]
         gain_db = cols[1]
-        phase_deg = cols[3]
+        phase_deg = _unwrap_phase_deg(cols[3])
         return AcResult(
             freq_hz=freq_hz,
             gain_db=gain_db,

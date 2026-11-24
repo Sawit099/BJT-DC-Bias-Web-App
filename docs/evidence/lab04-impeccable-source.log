@@ -1,0 +1,17 @@
+command: "C:\Users\b6829643\Documents\GitHub\BJT DC Bias Web App\.opencode\skills\impeccable\scripts\impeccable.cmd" detect --json "C:\Users\b6829643\Documents\GitHub\BJT DC Bias Web App\templates\index.html"
+exit: 2
+stdout:
+[
+  {
+    "antipattern": "flat-type-hierarchy",
+    "name": "Flat type hierarchy",
+    "description": "Dominant heading and body roles are separated by less than 1.25× at every step, leaving the size hierarchy flat. Add at least one stronger size step.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\b6829643\\Documents\\GitHub\\BJT DC Bias Web App\\templates\\index.html",
+    "line": 0,
+    "snippet": "Role sizes: body 16px, h1 16px, h2 16px (largest adjacent step 1.00:1; target 1.25:1)"
+  }
+]
+stderr:
+impeccable detect: could not read linked stylesheet {{ url_for('static', filename='style.css') }} (resolved to C:\Users\b6829643\Documents\GitHub\BJT DC Bias Web App\templates\{{ url_for('static', filename='style.css') }}); color and custom-property rules will be incomplete

@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BJT DC Bias Calculator</title>
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -116,7 +117,7 @@
 
   <section class="sim-section" id="simulator">
     <h2>CE Amplifier Simulator (ngspice)</h2>
-    <p class="muted">CE Voltage Divider reference circuit · คำนวณด้วย ngspice จริง (.op / .ac / .tran) แยกจากผล analytical ด้านบน</p>
+    <p class="muted">CE Voltage Divider reference circuit · คำนวณด้วย ngspice จริง (.op / .ac / .tran) แยกจากผลคำนวณเชิงวิเคราะห์ด้านบน</p>
 
     <div class="sim-grid">
       <label>VCC [V]<input id="sim-vcc" type="text" inputmode="decimal" value="12"></label>
@@ -142,7 +143,7 @@
       <button type="button" id="sim-run">Run Simulation</button>
     </div>
 
-    <div id="sim-status" class="status-box" data-source="ngspice">พร้อมรัน ngspice simulation</div>
+    <div id="sim-status" class="status-box" data-source="ngspice" aria-live="polite">พร้อมรัน ngspice simulation</div>
     <div id="sim-provenance" class="muted sim-provenance">Engine: ngspice · Model: Q2N3904_LAB04 · ผลลัพธ์มาจากการรันจริง ไม่ใช่ค่าฝังในโค้ด</div>
 
     <div id="sim-error" class="error-box" role="alert" hidden></div>
@@ -150,22 +151,28 @@
     <div id="sim-op" hidden>
       <h3>DC Operating Point (SPICE .op)</h3>
       <table>
-        <tr><th>ปริมาณ</th><th>ค่า</th><th>หน่วย</th></tr>
-        <tr><td>VB</td><td id="op-vb">-</td><td>V</td></tr>
-        <tr><td>VE</td><td id="op-ve">-</td><td>V</td></tr>
-        <tr><td>VC</td><td id="op-vc">-</td><td>V</td></tr>
-        <tr><td>VCE</td><td id="op-vce">-</td><td>V</td></tr>
-        <tr><td>IC</td><td id="op-ic">-</td><td>mA</td></tr>
+        <thead>
+          <tr><th scope="col">ปริมาณ</th><th scope="col">ค่า</th><th scope="col">หน่วย</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>VB</td><td id="op-vb">-</td><td>V</td></tr>
+          <tr><td>VE</td><td id="op-ve">-</td><td>V</td></tr>
+          <tr><td>VC</td><td id="op-vc">-</td><td>V</td></tr>
+          <tr><td>VCE</td><td id="op-vce">-</td><td>V</td></tr>
+          <tr><td>IC</td><td id="op-ic">-</td><td>mA</td></tr>
+        </tbody>
       </table>
     </div>
 
     <div id="sim-ac" class="chart-panel" hidden>
       <h3>Bode Plot (.ac) — ngspice</h3>
+      <p class="muted chart-note">Gain = 20·log10(|V(out)/V(in)|) · วัด Vin ที่ source node ก่อน Cin (AC 1 V) · Phase เป็นองศาแบบ unwrapped (วงจร CE กลับเฟส ~ −180°)</p>
       <div class="chart-wrap"><canvas id="acChart"></canvas></div>
     </div>
 
     <div id="sim-tran" class="chart-panel" hidden>
       <h3>Transient Waveform (.tran) — ngspice</h3>
+      <p class="muted chart-note">Vin = source node ก่อน Cin · Vout = หลัง Cout · สังเกตว่า Vin/Vout กลับเฟสกันประมาณ 180° ตามวงจร CE</p>
       <div class="chart-wrap"><canvas id="tranChart"></canvas></div>
     </div>
   </section>

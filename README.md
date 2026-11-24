@@ -6,13 +6,15 @@ Flask Web Application สำหรับคำนวณ **DC Operating Point** �
 
 สร้างเป็นผลงาน Lab 02–03 รายวิชา ENG29 2121 Computer Programming for Electrical Engineers
 
-## ลิงก์งานส่ง (Lab 03)
+## ลิงก์งานส่ง (Lab 03–04)
 
 - **Repository:** <https://github.com/Sawit099/BJT-DC-Bias-Web-App>
 - **Commit SHA ของงาน Lab 03:** `aae798d5a382846aada9299ef4f4ede7b3f7b8a0`
-- **วิธีตรวจ A1–A5:** Playwright MCP (Chrome จริง) — ตารางและภาพหลักฐานอยู่ที่ [`docs/validation.md`](docs/validation.md) §5
-- Commit ถัดจาก SHA นี้แก้เฉพาะส่วน "ลิงก์งานส่ง" ใน README ไม่มีการเปลี่ยนโค้ดหรือผลคำนวณ
-- SHA นี้เพิ่มความสะดวกในการเปิดเว็บ (`python app.py`, `start.bat`) สมการและผลคำนวณเหมือน commit ก่อนหน้า
+- **Commit SHA ของงาน Lab 04:** `PENDING_LAB04_SHA`
+- **วิธีตรวจ A1–A5 (Lab 03):** Playwright MCP (Chrome จริง) — ตารางและภาพหลักฐานอยู่ที่ [`docs/validation.md`](docs/validation.md) §5
+- **วิธีตรวจ B1–B8 (Lab 04):** Playwright MCP (Chrome จริง) + ngspice 47 + Impeccable — ตารางและภาพหลักฐานอยู่ที่ [`docs/validation.md`](docs/validation.md) §8
+- Commit ถัดจาก SHA ของ Lab 03 แก้เฉพาะส่วน "ลิงก์งานส่ง" ใน README ไม่มีการเปลี่ยนโค้ดหรือผลคำนวณ
+- Commit ถัดจาก SHA ของ Lab 04 แก้เฉพาะเลข SHA ใน README เช่นกัน; โค้ดและผลตรวจทั้งหมดอยู่ใน commit ที่ระบุ
 
 วิธีรันและเปิดเว็บอยู่ในหัวข้อ [การติดตั้ง](#การติดตั้ง) และ [การรันเว็บ](#การรันเว็บ) ด้านล่าง
 
@@ -68,7 +70,7 @@ python -m flask --app app run --debug
 python -m unittest discover -s tests -v
 ```
 
-ผลที่คาดหวัง: `Ran 51 tests ... OK` (รวมเทสต์ Lab 03 เดิม + เทสต์ ngspice/API/UI/เอกสาร Lab 04)
+ผลที่คาดหวัง: `Ran 57 tests ... OK` (รวมเทสต์ Lab 03 เดิม + เทสต์ ngspice/API/UI/เอกสาร/Impeccable fixes ของ Lab 04)
 
 ## โครงสร้างโปรเจกต์
 
@@ -83,7 +85,7 @@ static/app.js           เรียก /api/simulate และวาดกร�
 static/chart.umd.min.js Chart.js 4.4.1 UMD (vendored)
 tests/test_dc_bias.py   เทสต์สมการและ validation (22 tests)
 tests/test_spice_engine.py  เทสต์ ngspice discovery/netlist/run/parse (7 tests, skip ถ้าไม่มี ngspice)
-tests/test_web.py       เทสต์ HTTP/UI/API/เอกสาร (22 tests)
+tests/test_web.py       เทสต์ HTTP/UI/API/เอกสาร + UI polish regression (28 tests)
 ```
 
 ## โหมดวงจร
@@ -168,7 +170,7 @@ VCC = 12 V, R1 = 100 kΩ, R2 = 22 kΩ, RC = 2.2 kΩ, RE = 1 kΩ, β = 100, VBE =
 |---|---|---|
 | `dc_bias.py` | เขียน `calculate_fixed`, `calculate_emitter`, `_solve`, `as_dict()`, `parse_fixed`, `parse_emitter` | เทียบสมการกับใบงานทีละบรรทัด, ตรวจหน่วย kΩ→Ω, ตรวจว่า Condition `IB ≤ 0` และ `VCE ≤ 0.2 V` ตรงใบงาน |
 | `app.py` | เขียน `if/elif` เลือกโฟลเดอร์ตาม `mode` และส่ง `mode` ให้ template | ตรวจว่าโหมดไม่รู้จักไม่ถูกเดาเป็น Divider และ error ไม่แสดงผลรอบก่อน |
-| `tests/` | เขียนเทสต์ตามค่าอ้างอิง A1–A5 | รันเองทั้งหมด 38 เทสต์ และตรวจว่า Divider ยังได้ค่าเดิม |
+| `tests/` | เขียนเทสต์ตามค่าอ้างอิง A1–A5 | รันเองทั้งหมด 57 เทสต์ (38 ของ Lab 03 + 19 ของ Lab 04) และตรวจว่า Divider ยังได้ค่าเดิม |
 | เอกสาร | ร่างตาราง A1–A5 และ README | ตรวจตัวเลขกับเครื่องคิดเลขก่อนส่ง |
 
 **จุดที่เลือกฟังก์ชัน:** `app.py` ฟังก์ชัน `calculate_view()` — `if mode == "fixed" … elif mode == "emitter" … else`  
@@ -217,24 +219,62 @@ python app.py
 
 ### B1–B8 Browser Acceptance (สรุป)
 
-รายละเอียดเต็มและหลักฐานอยู่ใน [`docs/validation.md`](docs/validation.md) หัวข้อ Lab 04
+รายละเอียดเต็ม (Method/Input/Expected/Observed/Evidence) อยู่ใน [`docs/validation.md`](docs/validation.md) §8.2
 
-| Case | เป้าหมาย | ผล |
+| Case | เป้าหมายตามใบงาน | ผลจริง |
 |---|---|---|
-| B1 | หน้าโหลดมี Lab 03 + ส่วน CE Amplifier ngspice | PASS |
-| B2 | `.op` รันจริง แสดง VB/VE/VC/VCE/IC + engine/model/run id | PASS |
-| B3 | `.ac` รันจริง แสดง Bode plot (gain/phase) | PASS |
-| B4 | `.tran` รันจริง แสดง Vin/Vout waveform | PASS |
-| B5 | เปลี่ยน amp/freq แล้วรันใหม่ ได้ผลใหม่จริง | PASS |
-| B6 | input ไม่ถูกต้อง (RE=0) แสดง error และไม่ค้างผลสำเร็จเก่า | PASS |
-| B7 | engine หาย/หาไม่พบ รายงาน error ชัดเจน ไม่คืนข้อมูลปลอม | PASS (ตรวจด้วย automated test + direct engine check) |
-| B8 | Lab 03 divider regression ยังคำนวณถูก (VCE 8.052 V, Active) | PASS |
+| B1 | Regression: Fixed / Emitter / Divider ด้วยค่า Lab 3 | PASS — Divider IC 1.230 mA/VCE 8.052 V; Fixed 1.130/9.514; Emitter 1.026/8.705; ทั้งสาม Active |
+| B2 | DC SPICE: รัน `.op` แสดง VB/VE/VC/VCE/IC + Model + Run Status | PASS — VB 2.0507, VE 1.3795, VC 8.9790, VCE 7.5995 V, IC 1.4727 mA; Engine ngspice; Model Q2N3904_LAB04 |
+| B3 | เปลี่ยนเฉพาะ RE แล้วรันใหม่; operating point ต้องเปลี่ยน | PASS — RE 1→2 kΩ: IC 1.4727→0.8213 mA; VCE 7.5995→8.9596 V; run id เปลี่ยน |
+| B4 | AC: Bode plot frequency/gain/phase จาก run จริง | PASS — 101 points; gain 4.7979–4.9108 dB; phase −181.87°…−167.10°; x ticks 10 Hz–1 MHz |
+| B5 | Transient: `.tran` 10 mVpk, 1 kHz; Vin/Vout ตามเวลาและกลับเฟส | PASS — 1008 points; Vin max 0.0099996 V; Vout max 0.017627 V; correlation −0.999997 |
+| B6 | เปลี่ยน amplitude/frequency แล้ว waveform ต้องเปลี่ยนจริง | PASS — 20 mVpk/5 kHz: 5008 points; Vin max 0.02 V; Vout max 0.03520 V; run id เปลี่ยน |
+| B7 | Invalid/Fail: RE=0 หรือ engine หาย; ต้องมี error และไม่มี stale success | PASS — `การจำลองล้มเหลว` + `RE ต้องมีค่ามากกว่า 0`; ตาราง/กราฟซ่อน; engine missing คืน `ok:false` (automated test) |
+| B8 | UI desktop/mobile: สลับโหมด อ่านได้ ไม่ถูกตัด | PASS — desktop 1280 px และ mobile 390 px ไม่มี horizontal overflow; ปุ่ม/กราฟอ่านได้ |
+
+### ทำไมผล analytical กับ SPICE ไม่เท่ากัน
+
+| ปริมาณ | Lab 03 analytical (β = 100, VBE = 0.70 V) | Lab 04 SPICE (`Q2N3904_LAB04`) | เหตุผล |
+|---|---|---|---|
+| IC | 1.230 mA | 1.4727 mA | SPICE ใช้ `BF=200`, `IS=6.734f`, `VAF=74.03` และคำนวณ VBE จากโมเดล ไม่ใช่ β/VBE ที่ผู้ใช้กรอก |
+| VCE | 8.052 V | 7.5995 V | กระแส collector สูงขึ้นทำให้แรงดันตกคร่อม RC มากขึ้น |
+
+ความต่างนี้เป็นธรรมชาติของแบบจำลอง two different models ไม่ใช่ bug; UI แยกส่วน
+"ผลคำนวณเชิงวิเคราะห์" (Lab 03) กับ "CE Amplifier Simulator" (Lab 04) ไว้ชัดเจน
+และแสดง Engine/Model/Run id ทุกครั้ง
+
+### Impeccable — UI critique / polish
+
+- ติดตั้ง skill แบบ project-scoped: `npx impeccable install --project --providers=opencode`
+  (ไฟล์เครื่องมืออยู่ใน `.opencode/` ซึ่งไม่ commit; ผู้ตรวจสามารถติดตั้งใหม่ได้)
+- ใช้ **dual-agent critique**: Assessment A (design review) + Assessment B (detector/browser)
+  แยกกัน แล้วสังเคราะห์; รายละเอียดและ before/after อยู่ใน
+  [`docs/evidence/lab04-impeccable-critique.md`](docs/evidence/lab04-impeccable-critique.md)
+- **ก่อนแก้:** URL scan 0 anti-patterns + 1 advisory; critique พบ transient tick เป็น float ดิบ,
+  AC label ชนกัน, ปุ่ม `เปลี่ยนโหมด` ขึ้น 3 บรรทัดบน mobile, error ไม่ถูก announce/focus
+- **หลังแก้:** URL scan ที่ 1280 px และ 390 px คืน `[]`; แก้ tick format, mobile mode bar,
+  `aria-live`, `aria-invalid` + focus, `thead`/`scope`, `aria-label` ของ canvas และ `text-wrap: balance`
+- Source scan ยังรายงาน `flat-type-hierarchy` 1 รายการ แต่เป็น false positive เพราะ detector
+  อ่าน Jinja `url_for()` เป็น path ไม่ได้; ค่าจริงจาก browser คือ 24/18.4/16 px
+- **ยังไม่แก้ (ตั้งใจ/นอกขอบเขต v1):** ไม่มี schematic; ฟอร์ม analytical กับ simulator แยกกัน;
+  การเปลี่ยนโหมด Lab 03 ยัง reset input; chart เป็น canvas (มี `aria-label` แต่ไม่มี data table เต็ม);
+  label `Engine/Model/Run` คงเป็นอังกฤษตามข้อกำหนด Model/Run Status; การ์ดกว้างสูงสุด 720 px
+
+### Lab 04 — ส่วนที่ AI ช่วยและส่วนที่นักศึกษาตรวจ
+
+| ส่วน | AI ช่วย | นักศึกษาตรวจ |
+|---|---|---|
+| `spice_engine.py` | เขียน netlist, subprocess adapter, parser `.op/.ac/.tran`, phase conversion | ตรวจว่า ngspice 47 รัน batch ได้จริง, ตรวจ path/timeout/error handling และเทียบค่ากับ log |
+| `app.py` + `static/app.js` | เขียน `POST /api/simulate`, fetch, Chart.js rendering | ตรวจว่าไม่มีผลลัพธ์ hard-code, กราฟมาจาก run จริง, invalid/fail ไม่ค้างกราฟเก่า |
+| UI / Impeccable | ร่าง UI, ใช้ detector/critique, แก้ tick/mobile/aria | เลือก scope ที่แก้เฉพาะ UI, ตรวจว่าสมการฟิสิกส์และผล Lab 03 ไม่เปลี่ยน, ตรวจ before/after |
+| เอกสาร / Git | ร่าง README, validation, evidence | ตรวจตัวเลขกับ ngspice log/เครื่องคิดเลข, ตรวจ diff ก่อน commit, ตัดสินใจเรื่อง model provenance และข้อจำกัด |
 
 ### หมายเหตุ Lab 04
 
 - Chart.js เป็นไฟล์ vendored ใน `static/chart.umd.min.js` (ไม่พึ่ง CDN ตอนรัน)
 - ผล analytical Lab 03 และผล SPICE Lab 04 แสดงแยกส่วนกันชัดเจน
 - ไฟล์ temp ของ ngspice สร้างใน temporary directory ต่อรัน และไม่ commit
+- หลักฐาน ngspice log/sample อยู่ใน `docs/evidence/lab04-ngspice-*.txt` และ `lab04-ngspice-op.log`
 
 ## การเชื่อม Playwright MCP
 
