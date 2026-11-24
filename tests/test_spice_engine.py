@@ -22,5 +22,24 @@ class TestNgspiceDiscovery(unittest.TestCase):
                         se.find_ngspice()
 
 
+@unittest.skipUnless(se.ngspice_available(), "ngspice not installed")
+class TestOpRun(unittest.TestCase):
+    def test_run_op_reference_values(self):
+        inp = se.CEInput(vcc=12, r1k=100, r2k=22, rck=2.2, rek=1.0, rlk=10, cin_u=10, cout_u=10, vin_mvp=10, freq_hz=1000)
+        r = se.run_op(inp)
+        self.assertEqual(r.engine, "ngspice")
+        self.assertEqual(r.model, "Q2N3904_LAB04")
+        self.assertAlmostEqual(r.vb, 2.05, delta=0.15)
+        self.assertAlmostEqual(r.ve, 1.38, delta=0.15)
+        self.assertAlmostEqual(r.vc, 8.98, delta=0.25)
+        self.assertAlmostEqual(r.vce, 7.60, delta=0.25)
+        self.assertTrue(r.ic_ma > 0)
+
+    def test_invalid_rejected_before_run(self):
+        with self.assertRaises(se.NgspiceError):
+            se.CEInput(vcc=12, r1k=100, r2k=22, rck=2.2, rek=0, rlk=10, cin_u=10, cout_u=10, vin_mvp=10, freq_hz=1000).validate()
+
+
 if __name__ == "__main__":
     unittest.main()
+
